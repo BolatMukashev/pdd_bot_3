@@ -1,10 +1,8 @@
 # set_webhook.py — запускается локально один раз
 import asyncio
 from aiogram import Bot
-from config import FUNCTION_ID
+from config import FUNCTION_URL, BOT_TOKEN
 
-BOT_TOKEN = "YOUR_TOKEN"
-FUNCTION_URL = f"https://functions.yandexcloud.net/{FUNCTION_ID}"
 
 async def main():
     bot = Bot(token=BOT_TOKEN)
