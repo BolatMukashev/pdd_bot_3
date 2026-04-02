@@ -1,0 +1,24 @@
+# Исключаем виртуальное окружение
+venv/
+env/
+
+# Кэшированные файлы
+__pycache__/
+*.pyc
+*.pyo
+
+# Файлы конфигурации и секретные ключи
+.env
+.venv/
+*.log
+
+# Игнорируем зависимости, если они не в requirements.txt
+pip-log.txt
+
+my_database.db
+*.session
+*.session-journal
+
+ngrok*
+*.mp4
+wh_connect.txt
