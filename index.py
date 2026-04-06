@@ -1,6 +1,24 @@
 import json
 from aiogram.types import Update
-from main import bot, dp, logger
+from aiogram import Bot, Dispatcher
+from config import BOT_TOKEN
+import logging
+from main import commands_router, text_router, payment_router, media_router
+
+
+# Настройка логирования
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+
+bot = Bot(token=BOT_TOKEN)
+dp = Dispatcher()
+
+
+dp.include_router(commands_router)
+dp.include_router(text_router)
+dp.include_router(payment_router)
+dp.include_router(media_router)
 
 
 async def handler_async(event, context):
