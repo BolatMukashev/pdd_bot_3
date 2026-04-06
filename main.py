@@ -12,6 +12,14 @@ media_router = Router()
 payment_router = Router()
 
 
+async def on_startup():
+    print("✅ Бот запущен!")
+
+
+async def on_shutdown():
+    print("🛑 Бот остановлен!")
+
+
 @commands_router.message(CommandStart())
 async def cmd_start(message: Message):
     await message.answer(f"Привет, {message.from_user.full_name}!")
@@ -26,6 +34,9 @@ if __name__ == "__main__":
 
     bot = Bot(token=TEST_BOT_TOKEN)
     dp = Dispatcher()
+
+    dp.startup.register(on_startup)
+    dp.shutdown.register(on_shutdown)
 
     dp.include_router(commands_router)
     dp.include_router(text_router)
