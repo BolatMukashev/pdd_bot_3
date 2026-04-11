@@ -1,7 +1,15 @@
 from config import TEST_BOT_TOKEN
-from main import on_shutdown, on_startup, commands_router, text_router, payment_router, media_router
+from main import commands_router, text_router, payment_router, media_router
 from aiogram import Bot, Dispatcher
 import asyncio
+
+
+async def on_startup():
+    print("✅ Бот запущен!")
+
+
+async def on_shutdown():
+    print("🛑 Бот остановлен!")
 
 
 if __name__ == "__main__":

@@ -9,14 +9,6 @@ media_router = Router()
 payment_router = Router()
 
 
-async def on_startup():
-    print("✅ Бот запущен!")
-
-
-async def on_shutdown():
-    print("🛑 Бот остановлен!")
-
-
 @commands_router.message(CommandStart())
 async def cmd_start(message: Message):
     await message.answer(f"Привет, {message.from_user.full_name}!")
