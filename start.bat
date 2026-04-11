@@ -1,1 +1,0 @@
-C:\Users\Astana\Desktop\MyPrograms\pdd_bot_3\.venv\Scripts\python.exe C:\Users\Astana\Desktop\MyPrograms\pdd_bot_3\main.py
