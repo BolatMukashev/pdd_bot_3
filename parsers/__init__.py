@@ -1,0 +1,1 @@
+from config import TEST_BOT_TOKEN, TEST_CHAT_ID
