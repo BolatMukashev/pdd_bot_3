@@ -1,5 +1,8 @@
 from pathlib import Path
+from itertools import islice
 import json
+from get_photo_id import get_photo_id
+from  time import sleep
 
 
 def parse_questions(file_path: Path):
@@ -12,6 +15,10 @@ def parse_questions(file_path: Path):
 
     while i < n:
         image = lines[i]
+        dir = Path(r"C:\Users\Astana\Desktop\Client\Болат\Программа пдд 1.10 (2)\Программа пдд 1.10\pictures")
+        image_path = dir / image
+        print(image_path)
+        file_id = get_photo_id(image_path)
         i += 1
 
         if i >= n:
@@ -35,7 +42,12 @@ def parse_questions(file_path: Path):
             if line.lower().endswith((".jpg", ".jpeg", ".png", ".webp")):
                 break
 
-            answers.append(line)
+            clean_line = line.rstrip()
+
+            if clean_line.endswith("."):
+                clean_line = clean_line[:-1].rstrip()
+
+            answers.append(clean_line)
             i += 1
 
         # optional comment
@@ -49,12 +61,14 @@ def parse_questions(file_path: Path):
                 i += 1
 
         questions.append({
-            "image": image,
+            "image": file_id,
             "question": question,
             "options": answers,
             "correct_option_ids": correct_index,
             "explanation": comment
         })
+
+        sleep(1)
 
     return questions
 
@@ -64,7 +78,7 @@ def parse_directory(directory: str):
 
     all_questions = []
 
-    for file_path in directory.rglob("*.txt"):
+    for file_path in islice(directory.rglob("*.txt"), 3):
         parsed = parse_questions(file_path)
         all_questions.extend(parsed)
 
