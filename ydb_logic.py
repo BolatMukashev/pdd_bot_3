@@ -474,8 +474,8 @@ class Question:
     question: str
     options: List[str]
     correct_option_id: int
-    explanation: str
-    image: str
+    explanation: Optional[str] = None
+    image: Optional[str] = None
 
 
 class QuestionClient(YDBClient):
@@ -504,9 +504,9 @@ class QuestionClient(YDBClient):
         await self.execute_query(
             f"""
             DECLARE $id AS Uint32;
-            DECLARE $question AS Utf8?;
-            DECLARE $options AS Json?;
-            DECLARE $correct_option_id AS Uint32?;
+            DECLARE $question AS Utf8;
+            DECLARE $options AS Json;
+            DECLARE $correct_option_id AS Uint32;
             DECLARE $explanation AS Utf8?;
             DECLARE $image AS Utf8?;
 
@@ -518,7 +518,6 @@ class QuestionClient(YDBClient):
             """,
             self._to_params(questions)
         )
-        return
 
     async def get_question_by_id(self, id: int) -> Optional[Question]:
         """Получение вопроса по id"""
@@ -544,9 +543,9 @@ class QuestionClient(YDBClient):
         await self.execute_query(
             f"""
             DECLARE $id AS Uint32;
-            DECLARE $question AS Utf8?;
-            DECLARE $options AS Json?;
-            DECLARE $correct_option_id AS Uint32?;
+            DECLARE $question AS Utf8;
+            DECLARE $options AS Json;
+            DECLARE $correct_option_id AS Uint32;
             DECLARE $explanation AS Utf8?;
             DECLARE $image AS Utf8?;
 
@@ -573,9 +572,9 @@ class QuestionClient(YDBClient):
             return False
 
         FIELD_TYPES = {
-            "question": ydb.OptionalType(ydb.PrimitiveType.Utf8),
-            "options": ydb.OptionalType(ydb.PrimitiveType.Json),
-            "correct_option_id": ydb.OptionalType(ydb.PrimitiveType.Uint32),
+            "question": ydb.PrimitiveType.Utf8,
+            "options": ydb.PrimitiveType.Json,
+            "correct_option_id": ydb.PrimitiveType.Uint32,
             "explanation": ydb.OptionalType(ydb.PrimitiveType.Utf8),
             "image": ydb.OptionalType(ydb.PrimitiveType.Utf8),
         }
@@ -593,10 +592,12 @@ class QuestionClient(YDBClient):
             param_type = FIELD_TYPES[field]
             params[param_name] = (value, param_type)
 
-            if field == "options":
-                declare_lines.append(f"DECLARE {param_name} AS Json?;")
+            if field == "question":
+                declare_lines.append(f"DECLARE {param_name} AS Utf8;")
+            elif field == "options":
+                declare_lines.append(f"DECLARE {param_name} AS Json;")
             elif field == "correct_option_id":
-                declare_lines.append(f"DECLARE {param_name} AS Uint32?;")
+                declare_lines.append(f"DECLARE {param_name} AS Uint32;")
             else:
                 declare_lines.append(f"DECLARE {param_name} AS Utf8?;")
 
@@ -620,12 +621,25 @@ class QuestionClient(YDBClient):
             """,
             {"$id": (id, ydb.PrimitiveType.Uint32)}
         )
+    
+    async def get_questions_count(self) -> int:
+        result = await self.execute_query(
+            f"""
+            SELECT COUNT(*) AS count
+            FROM `{self.table_name}`;
+            """
+        )
+        return result[0].rows[0]["count"]
 
     def _row_to_question(self, row) -> Question:
+        options = row.get("options")
+        if isinstance(options, str):
+            options = json.loads(options)
+            
         return Question(
             id=row["id"],
             question=row.get("question"),
-            options=json.loads(row.get("options") or "[]"),
+            options=options,
             correct_option_id=row.get("correct_option_id"),
             explanation=row.get("explanation"),
             image=row.get("image")
