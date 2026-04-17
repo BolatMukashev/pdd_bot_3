@@ -7,7 +7,7 @@ import random
 # ngrok http 127.0.0.1:8080 - поднять webhood локально на 8080 порту
 
 
-async def add_new_fake_user(user: User):
+async def add_new_user(user: User):
     async with UserClient() as client:
         user = await client.insert_user(user)
 
@@ -21,7 +21,7 @@ async def get_user_by_id(telegram_id: int):
         print(user)
         create_time = await get_user_create_time(user)
         print(create_time)
-    return user
+    return user, create_time
 
 
 async def get_user_create_time(user: User):
@@ -31,7 +31,7 @@ async def get_user_create_time(user: User):
         return dt.strftime("%H:%M:%S %Y-%m-%d")
 
 
-async def add_new_fake_question(question: Question, table_name: QuestionsTables = QuestionsTables.RU.value):
+async def add_new_question(question: Question, table_name: QuestionsTables = QuestionsTables.RU.value):
     async with QuestionClient(table_name) as client:
         await client.insert_question(question)
     print(f"✅ Вопрос  успешно добавлен в базу")
@@ -67,6 +67,7 @@ if __name__ == "__main__":
         username="kimi",
         language_code="ru",
     )
+
     # asyncio.run(add_new_fake_user(new_user)
     # asyncio.run(get_user_by_id(12345678909))
     # asyncio.run(get_user_by_id(12345678909))
