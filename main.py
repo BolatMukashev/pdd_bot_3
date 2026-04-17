@@ -23,7 +23,7 @@ async def echo(message: Message):
 @commands_router.message(Command("question"))
 async def question(message: Message):
     await message.answer_photo()
-    await message.answer_poll()
+    await message.answer_poll(question="sd", options=[], type="quiz", correct_option_id=0, explanation="ds")
 
 @media_router.message(F.photo)
 async def get_photo_file_id(message: Message):
