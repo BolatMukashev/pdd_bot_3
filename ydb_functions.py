@@ -68,7 +68,7 @@ if __name__ == "__main__":
         language_code="ru",
     )
 
-    # asyncio.run(add_new_fake_user(new_user)
+    # asyncio.run(add_new_user(new_user)
     # asyncio.run(get_user_by_id(12345678909))
     # asyncio.run(get_user_by_id(12345678909))
 
@@ -79,7 +79,7 @@ if __name__ == "__main__":
          correct_option_id=0
     )
 
-    # asyncio.run(add_new_fake_question(new_question))
+    # asyncio.run(add_new_question(new_question))
 
     asyncio.run(get_random_question())
 

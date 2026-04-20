@@ -31,14 +31,12 @@ def parse_questions(file_path: Path):
                 i += 1
                 break
 
-            # если вдруг новый файл/вопрос начинается с картинки
             if line.lower().endswith((".jpg", ".jpeg", ".png", ".webp")):
                 break
 
             answers.append(line)
             i += 1
 
-        # optional comment
         comment = None
         if i < n:
             line = lines[i]
@@ -47,6 +45,33 @@ def parse_questions(file_path: Path):
             ):
                 comment = line
                 i += 1
+
+        # ── Validation ──────────────────────────────────────────────
+        if len(question) > 1300:
+            print(
+                f"'question' exceeds 1300 chars ({len(question)}) "
+                f"in file: {file_path.name}"
+            )
+
+        if not (2 <= len(answers) <= 10):
+            print(
+                f"'options' count is {len(answers)} (must be 2–10) "
+                f"in file: {file_path.name}"
+            )
+
+        for idx, option in enumerate(answers, start=1):
+            if len(option) > 100:
+                print(
+                    f"option #{idx} exceeds 100 chars ({len(option)}) "
+                    f"in file: {file_path.name}"
+                )
+
+        if comment is not None and len(comment) > 200:
+            print(
+                f"'explanation' exceeds 200 chars ({len(comment)}) "
+                f"in file: {file_path.name.split('_utf8.txt')[0]}"
+            )
+        # ────────────────────────────────────────────────────────────
 
         questions.append({
             "image": image,
@@ -72,7 +97,7 @@ def parse_directory(directory: str):
 
 
 if __name__ == "__main__":
-    input_dir = r"C:\Users\Astana\Desktop\Client\Болат\Программа пдд 1.10 (2)\Программа пдд 1.10\questions"  # папка с txt файлами
+    input_dir = r"C:\Users\Astana\Desktop\MyPrograms\pdd_bot_3\data\questions"
     output_file = "questions.json"
 
     result = parse_directory(input_dir)
@@ -81,3 +106,4 @@ if __name__ == "__main__":
         json.dump(result, f, ensure_ascii=False, indent=2)
 
     print(f"Parsed: {len(result)} questions")
+    

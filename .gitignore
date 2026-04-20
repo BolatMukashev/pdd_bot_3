@@ -1,6 +1,7 @@
 # Исключаем виртуальное окружение
 venv/
 env/
+data/
 
 # Кэшированные файлы
 __pycache__/
@@ -23,3 +24,4 @@ ngrok*
 *.mp4
 wh_connect.txt
 set-webhook.txt
+*.json
