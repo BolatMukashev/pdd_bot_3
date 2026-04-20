@@ -2,11 +2,12 @@ from pathlib import Path
 import json
 
 
-def parse_questions(file_path: Path):
+def parse_question(file_path: Path):
     with file_path.open("r", encoding="utf-8") as f:
         lines = [line.strip() for line in f if line.strip()]
 
     questions = []
+    errors_count: int = 0
     i = 0
     n = len(lines)
 
@@ -52,12 +53,14 @@ def parse_questions(file_path: Path):
                 f"'question' exceeds 1300 chars ({len(question)}) "
                 f"in file: {file_path.name}"
             )
+            errors_count += 1
 
         if not (2 <= len(answers) <= 10):
             print(
                 f"'options' count is {len(answers)} (must be 2–10) "
                 f"in file: {file_path.name}"
             )
+            errors_count += 1
 
         for idx, option in enumerate(answers, start=1):
             if len(option) > 100:
@@ -65,12 +68,15 @@ def parse_questions(file_path: Path):
                     f"option #{idx} exceeds 100 chars ({len(option)}) "
                     f"in file: {file_path.name}"
                 )
+                errors_count += 1
 
         if comment is not None and len(comment) > 200:
             print(
                 f"'explanation' exceeds 200 chars ({len(comment)}) "
                 f"in file: {file_path.name.split('_utf8.txt')[0]}"
             )
+            errors_count += 1
+
         # ────────────────────────────────────────────────────────────
 
         questions.append({
@@ -81,29 +87,32 @@ def parse_questions(file_path: Path):
             "explanation": comment
         })
 
-    return questions
+    return questions, errors_count
 
 
-def parse_directory(directory: str):
+def parse_directory(directory: str, ):
     directory = Path(directory)
 
     all_questions = []
+    errors_count = 0
 
     for file_path in directory.rglob("*.txt"):
-        parsed = parse_questions(file_path)
+        parsed, errors = parse_question(file_path)
         all_questions.extend(parsed)
+        errors_count += errors
 
-    return all_questions
+    return all_questions, errors_count
 
 
 if __name__ == "__main__":
     input_dir = r"C:\Users\Astana\Desktop\MyPrograms\pdd_bot_3\data\questions"
     output_file = "questions.json"
 
-    result = parse_directory(input_dir)
+    result, errors_count = parse_directory(input_dir)
 
     with open(output_file, "w", encoding="utf-8") as f:
         json.dump(result, f, ensure_ascii=False, indent=2)
 
-    print(f"Parsed: {len(result)} questions")
+    print(f"Число ошибок: {errors_count}")
+    print(f"Спарсено: {len(result)} вопросов")
     
