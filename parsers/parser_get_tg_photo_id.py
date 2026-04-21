@@ -1,5 +1,11 @@
 from pathlib import Path
 import requests
+import sys
+import os
+from time import sleep
+
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+
 from config import TEST_BOT_TOKEN, ADMIN_ID
 
 
@@ -26,6 +32,9 @@ def get_photo_id(file_path):
         return None
 
     file_id = result["result"]["photo"][-1]["file_id"]
+
+    sleep(1) # чтобы избежать превышения лимита запросов к Telegram API
+
     return file_id
 
 

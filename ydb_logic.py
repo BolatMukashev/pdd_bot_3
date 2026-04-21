@@ -481,7 +481,7 @@ class Question:
 class QuestionClient(YDBClient):
     def __init__(self, table_name: QuestionsTables, endpoint: str = YDB_ENDPOINT, database: str = YDB_PATH, token: str = YDB_TOKEN):
         super().__init__(endpoint, database, token)
-        self.table_name = table_name
+        self.table_name = table_name.value
         self.table_schema = f"""
             CREATE TABLE `{self.table_name}` (
                 `id` Uint32 NOT NULL,
@@ -497,6 +497,7 @@ class QuestionClient(YDBClient):
     async def create_questions_table(self):
         """Создание таблицы questions"""
         await self.create_table(self.table_name, self.table_schema)
+        return self.table_name
     
     async def insert_question(self, questions: Question):
         """Вставка или обновление вопроса (UPSERT) и возврат объекта Questions"""
@@ -669,9 +670,9 @@ async def create_tables_on_ydb():
     #     await client.create_payments_table()
     #     print("Table 'PAYMENTS' created successfully!")
 
-    async with QuestionClient(QuestionsTables.RU.value) as client:
-        await client.create_questions_table()
-        print(f"Table '{QuestionsTables.RU.value}' created successfully!")
+    async with QuestionClient(QuestionsTables.RU) as client:
+        table_name = await client.create_questions_table()
+        print(f"Table '{table_name}' created successfully!")
 
 
 # --------------------------------------------------------- ЗАПУСК -------------------------------------------------------

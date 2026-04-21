@@ -31,27 +31,27 @@ async def get_user_create_time(user: User):
         return dt.strftime("%H:%M:%S %Y-%m-%d")
 
 
-async def add_new_question(question: Question, table_name: QuestionsTables = QuestionsTables.RU.value):
+async def add_new_question(question: Question, table_name: QuestionsTables):
     async with QuestionClient(table_name) as client:
         await client.insert_question(question)
     print(f"✅ Вопрос  успешно добавлен в базу")
 
 
-async def get_questions_count(table_name: QuestionsTables = QuestionsTables.RU.value):
+async def get_questions_count(table_name: QuestionsTables):
     async with QuestionClient(table_name) as client:
         count = await client.get_questions_count()
         print(f"Всего вопросов: {count}")
         return count
-    
 
-async def get_question_by_id(id: int, table_name: QuestionsTables = QuestionsTables.RU.value):
+
+async def get_question_by_id(id: int, table_name: QuestionsTables):
     async with QuestionClient(table_name) as client:
         question = await client.get_question_by_id(id)
         print(question)
     return question
 
 
-async def get_random_question(table_name: QuestionsTables = QuestionsTables.RU.value):
+async def get_random_question(table_name: QuestionsTables):
     count = await get_questions_count(table_name)
     random_num = random.randint(1, count)
     async with QuestionClient(table_name) as client:
@@ -81,5 +81,5 @@ if __name__ == "__main__":
 
     # asyncio.run(add_new_question(new_question))
 
-    asyncio.run(get_random_question())
+    asyncio.run(get_random_question(QuestionsTables.RU))
 

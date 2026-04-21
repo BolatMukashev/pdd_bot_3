@@ -1,5 +1,7 @@
 from pathlib import Path
 import json
+from itertools import islice
+from parser_get_tg_photo_id import get_photo_id
 
 
 def parse_question(file_path: Path):
@@ -12,15 +14,22 @@ def parse_question(file_path: Path):
     n = len(lines)
 
     while i < n:
+        # картинка
         image = lines[i]
+        dir = Path(r"C:\Users\Astana\Desktop\MyPrograms\pdd_bot_3\data\pictures")
+        image_path = dir / image
+        print(image_path)
+        file_id = get_photo_id(image_path)
         i += 1
 
         if i >= n:
             break
-
+        
+        # вопрос
         question = lines[i]
         i += 1
 
+        # ответы
         answers = []
         correct_index = None
 
@@ -35,9 +44,10 @@ def parse_question(file_path: Path):
             if line.lower().endswith((".jpg", ".jpeg", ".png", ".webp")):
                 break
 
-            answers.append(line)
+            answers.append(line.strip().rstrip("."))
             i += 1
 
+        # комментарий
         comment = None
         if i < n:
             line = lines[i]
@@ -50,14 +60,14 @@ def parse_question(file_path: Path):
         # ── Validation ──────────────────────────────────────────────
         if len(question) > 1300:
             print(
-                f"'question' exceeds 1300 chars ({len(question)}) "
+                f"'question' превышение 1300 символов ({len(question)}) "
                 f"in file: {file_path.name}"
             )
             errors_count += 1
 
         if not (2 <= len(answers) <= 10):
             print(
-                f"'options' count is {len(answers)} (must be 2–10) "
+                f"'options' количество {len(answers)} (должно быть 2–10) "
                 f"in file: {file_path.name}"
             )
             errors_count += 1
@@ -65,38 +75,39 @@ def parse_question(file_path: Path):
         for idx, option in enumerate(answers, start=1):
             if len(option) > 100:
                 print(
-                    f"option #{idx} exceeds 100 chars ({len(option)}) "
+                    f"option #{idx} превышает 100 символов ({len(option)}) "
                     f"in file: {file_path.name}"
                 )
                 errors_count += 1
 
         if comment is not None and len(comment) > 200:
             print(
-                f"'explanation' exceeds 200 chars ({len(comment)}) "
-                f"in file: {file_path.name.split('_utf8.txt')[0]}"
+                f"'explanation' превышает 200 символов ({len(comment)}) "
+                f"in file: {file_path.name}"
             )
             errors_count += 1
 
         # ────────────────────────────────────────────────────────────
 
         questions.append({
-            "image": image,
+            "id": int(file_path.name.split('_utf8.txt')[0]),
+            "image": file_id,
             "question": question,
             "options": answers,
-            "correct_option_ids": correct_index,
+            "correct_option_id": correct_index,
             "explanation": comment
         })
 
     return questions, errors_count
 
 
-def parse_directory(directory: str, ):
+def parse_txt_files(directory: str, start: int, end: int):
     directory = Path(directory)
 
     all_questions = []
     errors_count = 0
 
-    for file_path in directory.rglob("*.txt"):
+    for file_path in islice(directory.rglob("*.txt"), start, end + 1):
         parsed, errors = parse_question(file_path)
         all_questions.extend(parsed)
         errors_count += errors
@@ -106,9 +117,9 @@ def parse_directory(directory: str, ):
 
 if __name__ == "__main__":
     input_dir = r"C:\Users\Astana\Desktop\MyPrograms\pdd_bot_3\data\questions"
-    output_file = "questions.json"
+    output_file = "parsers/questions.json"
 
-    result, errors_count = parse_directory(input_dir)
+    result, errors_count = parse_txt_files(input_dir, 1001, 1018)
 
     with open(output_file, "w", encoding="utf-8") as f:
         json.dump(result, f, ensure_ascii=False, indent=2)
