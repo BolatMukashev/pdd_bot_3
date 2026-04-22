@@ -74,12 +74,12 @@ if __name__ == "__main__":
 
     new_question = Question(
          id=2,
-         question="город в Казахстане?",
-         options=["Астана", "Лондон", "Париж"],
+         question="город в Казахстане1?",
+         options=["Астана", "Лондон1", "Париж"],
          correct_option_id=0
     )
 
-    # asyncio.run(add_new_question(new_question))
+    # asyncio.run(add_new_question(new_question, QuestionsTables.RU))
 
-    asyncio.run(get_random_question(QuestionsTables.RU))
+    # asyncio.run(get_random_question(QuestionsTables.RU))
 

@@ -13,7 +13,7 @@ def get_photo_id(file_path):
     path = Path(file_path)
 
     if not path.exists() or not path.is_file():
-        print(f"Файл не найден: {path}")
+        print(f"Файл не найден: {path.name}")
         return None
 
     url = f"https://api.telegram.org/bot{TEST_BOT_TOKEN}/sendPhoto"

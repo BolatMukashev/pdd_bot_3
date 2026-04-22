@@ -119,11 +119,23 @@ if __name__ == "__main__":
     input_dir = r"C:\Users\Astana\Desktop\MyPrograms\pdd_bot_3\data\questions"
     output_file = "parsers/questions.json"
 
-    result, errors_count = parse_txt_files(input_dir, 1001, 1018)
+    result, errors_count = parse_txt_files(input_dir, 301, 500)
+
+    # Читаем существующие данные, если файл есть
+    existing = []
+    if Path(output_file).exists():
+        with open(output_file, "r", encoding="utf-8") as f:
+            existing = json.load(f)
+
+    # Объединяем, избегая дублей по id
+    existing_ids = {q["id"] for q in existing}
+    new_questions = [q for q in result if q["id"] not in existing_ids]
+    combined = existing + new_questions
 
     with open(output_file, "w", encoding="utf-8") as f:
-        json.dump(result, f, ensure_ascii=False, indent=2)
+        json.dump(combined, f, ensure_ascii=False, indent=2)
 
     print(f"Число ошибок: {errors_count}")
-    print(f"Спарсено: {len(result)} вопросов")
+    print(f"Новых вопросов добавлено: {len(new_questions)}")
+    print(f"Всего вопросов в файле: {len(combined)}")
     
