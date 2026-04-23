@@ -119,7 +119,7 @@ if __name__ == "__main__":
     input_dir = r"C:\Users\Astana\Desktop\MyPrograms\pdd_bot_3\data\questions"
     output_file = "parsers/questions.json"
 
-    result, errors_count = parse_txt_files(input_dir, 301, 500)
+    result, errors_count = parse_txt_files(input_dir, 1001, 1019)
 
     # Читаем существующие данные, если файл есть
     existing = []

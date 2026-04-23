@@ -33,7 +33,7 @@ def get_photo_id(file_path):
 
     file_id = result["result"]["photo"][-1]["file_id"]
 
-    sleep(1) # чтобы избежать превышения лимита запросов к Telegram API
+    sleep(0.5) # чтобы избежать превышения лимита запросов к Telegram API
 
     return file_id
 
