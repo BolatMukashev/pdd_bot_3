@@ -58,9 +58,9 @@ def parse_question(file_path: Path):
                 i += 1
 
         # ── Validation ──────────────────────────────────────────────
-        if len(question) > 1300:
+        if len(question) > 300:
             print(
-                f"'question' превышение 1300 символов ({len(question)}) "
+                f"'question' превышение 300 символов ({len(question)}) "
                 f"in file: {file_path.name}"
             )
             errors_count += 1
@@ -119,7 +119,7 @@ if __name__ == "__main__":
     input_dir = r"C:\Users\Astana\Desktop\MyPrograms\pdd_bot_3\data\questions"
     output_file = "parsers/questions.json"
 
-    result, errors_count = parse_txt_files(input_dir, 1001, 1019)
+    result, errors_count = parse_txt_files(input_dir, 1, 1019)
 
     # Читаем существующие данные, если файл есть
     existing = []

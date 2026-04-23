@@ -1,5 +1,7 @@
+# polling_start.py
+
 from config import TEST_BOT_TOKEN
-from main import commands_router, text_router, payment_router, media_router
+from main import commands_router, text_router, payment_router, media_router, poll_router
 from aiogram import Bot, Dispatcher
 import asyncio
 
@@ -24,6 +26,7 @@ if __name__ == "__main__":
     dp.include_router(text_router)
     dp.include_router(payment_router)
     dp.include_router(media_router)
+    dp.include_router(poll_router)
 
     async def main():
         await dp.start_polling(bot)
