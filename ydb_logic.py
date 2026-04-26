@@ -153,10 +153,13 @@ class YDBClient:
 @dataclass
 class User:
     telegram_id: int
-    first_name: Optional[str] = None
+    full_name: Optional[str] = None
     username: Optional[str] = None
     language_code: Optional[str] = None
     created_at: Optional[int] = None  # Храним как timestamp (секунды с эпохи)
+    trial_ends_at: Optional[int] = None  # Храним как timestamp (секунды с эпохи)
+    is_paid: bool = False
+    night_mode: bool = False
 
 
 class UserClient(YDBClient):
@@ -166,10 +169,13 @@ class UserClient(YDBClient):
         self.table_schema = """
             CREATE TABLE `users` (
                 `telegram_id` Uint64 NOT NULL,
-                `first_name` Utf8,
+                `full_name` Utf8,
                 `username` Utf8,
                 `language_code` Utf8,
                 `created_at` Uint64,
+                `trial_ends_at` Uint64,
+                `is_paid` Bool,
+                `night_mode` Bool,
                 PRIMARY KEY (`telegram_id`)
             )
         """
@@ -184,23 +190,29 @@ class UserClient(YDBClient):
         user_data = await self.get_user_by_id(user.telegram_id)
 
         if user_data is None:
-            from datetime import datetime, timezone
+            from datetime import datetime, timezone, timedelta
             user.created_at = self.datetime_to_timestamp(datetime.now(timezone.utc))
+            user.trial_ends_at = self.datetime_to_timestamp(datetime.now(timezone.utc) + timedelta(days=1))
+
         else:
             user.created_at = user_data.created_at
+            user.trial_ends_at = user_data.trial_ends_at
 
         await self.execute_query(
             """
             DECLARE $telegram_id AS Uint64;
-            DECLARE $first_name AS Utf8?;
+            DECLARE $full_name AS Utf8?;
             DECLARE $username AS Utf8?;
             DECLARE $language_code AS Utf8?;
             DECLARE $created_at AS Uint64?;
+            DECLARE $trial_ends_at AS Uint64?;
+            DECLARE $is_paid AS Bool;
+            DECLARE $night_mode AS Bool;
 
             UPSERT INTO users (
-                telegram_id, first_name, username, language_code, created_at
+                telegram_id, full_name, username, language_code, created_at, trial_ends_at, is_paid, night_mode
             ) VALUES (
-                $telegram_id, $first_name, $username, $language_code, $created_at
+                $telegram_id, $full_name, $username, $language_code, $created_at, $trial_ends_at, $is_paid, $night_mode
             );
             """,
             self._to_params(user)
@@ -213,7 +225,7 @@ class UserClient(YDBClient):
             """
             DECLARE $telegram_id AS Uint64;
 
-            SELECT telegram_id, first_name, username, language_code, created_at
+            SELECT telegram_id, full_name, username, language_code, created_at, trial_ends_at, is_paid, night_mode
             FROM users
             WHERE telegram_id = $telegram_id;
             """,
@@ -231,14 +243,20 @@ class UserClient(YDBClient):
         await self.execute_query(
             """
             DECLARE $telegram_id AS Uint64;
-            DECLARE $first_name AS Utf8?;
+            DECLARE $full_name AS Utf8?;
             DECLARE $username AS Utf8?;
             DECLARE $language_code AS Utf8?;
+            DECLARE $trial_ends_at AS Uint64?;
+            DECLARE $is_paid AS Bool;
+            DECLARE $night_mode AS Bool;
 
             UPDATE users SET
-                first_name = $first_name,
+                full_name = $full_name,
                 username = $username,
-                language_code = $language_code
+                language_code = $language_code,
+                trial_ends_at = $trial_ends_at,
+                is_paid = $is_paid,
+                night_mode = $night_mode
             WHERE telegram_id = $telegram_id;
             """,
             self._to_params(user)
@@ -250,30 +268,40 @@ class UserClient(YDBClient):
         if not fields:
             return False
 
-        # Фильтруем только поля, которые относятся к таблице users
-        user_fields = {k: v for k, v in fields.items() 
-                      if k in ['first_name', 'username', 'language_code']}
-        
+        FIELD_TYPES = {
+            "full_name":     ydb.OptionalType(ydb.PrimitiveType.Utf8),
+            "username":      ydb.OptionalType(ydb.PrimitiveType.Utf8),
+            "language_code": ydb.OptionalType(ydb.PrimitiveType.Utf8),
+            "is_paid":       ydb.PrimitiveType.Bool,
+            "night_mode":    ydb.PrimitiveType.Bool
+        }
+
+        user_fields = {k: v for k, v in fields.items() if k in FIELD_TYPES}
+
         if not user_fields:
             return False
 
         set_clauses = []
         params = {"$telegram_id": (user_id, ydb.PrimitiveType.Uint64)}
+        declare_lines = ["DECLARE $telegram_id AS Uint64;"]
 
         for field, value in user_fields.items():
             param_name = f"${field}"
-            set_clauses.append(f"{field} = {param_name}")
-            params[param_name] = (value, ydb.OptionalType(ydb.PrimitiveType.Utf8))
+            param_type = FIELD_TYPES[field]
 
-        set_query = ", ".join(set_clauses)
-        declare_params = "\n".join([f"DECLARE {p} AS Utf8?;" for p in params.keys() if p != "$telegram_id"])
+            set_clauses.append(f"{field} = {param_name}")
+            params[param_name] = (value, param_type)
+
+            if isinstance(param_type, ydb.OptionalType):
+                declare_lines.append(f"DECLARE {param_name} AS Utf8?;")
+            else:
+                declare_lines.append(f"DECLARE {param_name} AS Utf8;")
 
         query = f"""
-            DECLARE $telegram_id AS Uint64;
-            {declare_params}
+            {' '.join(declare_lines)}
 
             UPDATE users
-            SET {set_query}
+            SET {', '.join(set_clauses)}
             WHERE telegram_id = $telegram_id;
         """
 
@@ -290,23 +318,28 @@ class UserClient(YDBClient):
             {"$telegram_id": (telegram_id, ydb.PrimitiveType.Uint64)}
         )
 
-
     def _row_to_user(self, row) -> User:
         return User(
             telegram_id=row["telegram_id"],
-            first_name=row.get("first_name"),
+            full_name=row.get("full_name"),
             username=row.get("username"),
             language_code=row.get("language_code"),
-            created_at=row.get("created_at")
+            created_at=row.get("created_at"),
+            trial_ends_at=row.get("trial_ends_at"),
+            is_paid=row.get("is_paid"),
+            night_mode=row.get("night_mode")
         )
 
     def _to_params(self, user: User) -> dict:
         return {
             "$telegram_id": (user.telegram_id, ydb.PrimitiveType.Uint64),
-            "$first_name": (user.first_name, ydb.OptionalType(ydb.PrimitiveType.Utf8)),
+            "$full_name": (user.full_name, ydb.OptionalType(ydb.PrimitiveType.Utf8)),
             "$username": (user.username, ydb.OptionalType(ydb.PrimitiveType.Utf8)),
             "$language_code": (user.language_code, ydb.OptionalType(ydb.PrimitiveType.Utf8)),
-            "$created_at": (user.created_at, ydb.OptionalType(ydb.PrimitiveType.Uint64))
+            "$created_at": (user.created_at, ydb.OptionalType(ydb.PrimitiveType.Uint64)),
+            "$trial_ends_at": (user.trial_ends_at, ydb.OptionalType(ydb.PrimitiveType.Uint64)),
+            "$is_paid": (user.is_paid, ydb.PrimitiveType.Bool),
+            "$night_mode": (user.night_mode, ydb.PrimitiveType.Bool)
         }
     
     @staticmethod
@@ -670,9 +703,9 @@ async def create_tables_on_ydb():
     #     await client.create_payments_table()
     #     print("Table 'PAYMENTS' created successfully!")
 
-    async with QuestionClient(QuestionsTables.RU) as client:
-        table_name = await client.create_questions_table()
-        print(f"Table '{table_name}' created successfully!")
+    # async with QuestionClient(QuestionsTables.RU) as client:
+    #     table_name = await client.create_questions_table()
+    #     print(f"Table '{table_name}' created successfully!")
 
 
 # --------------------------------------------------------- ЗАПУСК -------------------------------------------------------

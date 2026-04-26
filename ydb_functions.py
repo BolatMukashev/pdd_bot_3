@@ -11,7 +11,7 @@ async def add_new_user(user: User):
     async with UserClient() as client:
         user = await client.insert_user(user)
 
-    print(f"✅ Пользователь {user.first_name} успешно добавлен в базу (ID: {user.telegram_id})")
+    print(f"✅ Пользователь {user.full_name} успешно добавлен в базу (ID: {user.telegram_id})")
     return user
 
 
@@ -63,7 +63,7 @@ async def get_random_question(table_name: QuestionsTables):
 if __name__ == "__main__":
     new_user = User(
         telegram_id=12345678909,
-        first_name="Bolat",
+        full_name="Bolat",
         username="kimi",
         language_code="ru",
     )

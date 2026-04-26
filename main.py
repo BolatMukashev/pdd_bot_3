@@ -3,8 +3,8 @@
 from aiogram import F, Router
 from aiogram.types import Message, PollAnswer
 from aiogram.filters import CommandStart, Command
-from ydb_functions import get_random_question
-from ydb_logic import QuestionsTables
+from ydb_functions import get_random_question, add_new_user
+from ydb_logic import QuestionsTables, User
 from aiogram import Bot
 
 
@@ -17,6 +17,14 @@ poll_router = Router()
 
 @commands_router.message(CommandStart())
 async def cmd_start(message: Message):
+    new_user = User(
+        telegram_id=message.from_user.id,
+        full_name=message.from_user.full_name,
+        username=message.from_user.username,
+        language_code=message.from_user.language_code,
+    )
+
+    await add_new_user(new_user)
     await message.answer(f"Привет, {message.from_user.full_name}!")
 
 
@@ -46,8 +54,6 @@ async def question(message: Message):
 @poll_router.poll_answer()
 async def handle_poll_answer(poll_answer: PollAnswer, bot: Bot):
     random_question = await get_random_question(QuestionsTables.RU)
-
-    option_ids = poll_answer.option_ids
 
     chat_id = poll_answer.user.id
 
