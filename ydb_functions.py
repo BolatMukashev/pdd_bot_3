@@ -1,3 +1,5 @@
+from typing import Any
+
 from ydb_logic import *
 import asyncio
 import random
@@ -85,6 +87,12 @@ async def get_user_info(telegram_id: int):
           f"Дата окончания пробного периода: {trial_ends_at}")
     
 
+async def edit_user_field(telegram_id: int, field_name: str, new_value: Any) -> None:
+    async with UserClient() as client:
+        await client.update_user_fields(telegram_id, **{field_name: new_value})
+    print(f"✅ Поле {field_name} пользователя с ID {telegram_id} успешно обновлено на {new_value}")
+    
+
 async def add_new_payment(payment: Payment) -> Payment:
     async with PaymentClient() as client:
         payment = await client.insert_payment(payment)
@@ -127,7 +135,10 @@ if __name__ == "__main__":
         type=PaymentType.PAY.value
     )
 
-    asyncio.run(add_new_payment(new_payment))
+    # asyncio.run(add_new_payment(new_payment))
+
+
+    # asyncio.run(edit_user_field(ADMIN_ID, "is_paid", True))
 
 
 

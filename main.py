@@ -1,11 +1,14 @@
 # main.py
 
 from aiogram import F, Router
-from aiogram.types import Message, PollAnswer
+from aiogram.types import Message, PollAnswer, LabeledPrice, PreCheckoutQuery
 from aiogram.filters import CommandStart, Command
-from ydb_functions import get_random_question, add_new_user, get_user_by_id, trial_check
-from ydb_logic import QuestionsTables, User
+from ydb_functions import get_random_question, add_new_user, get_user_by_id, trial_check, add_new_payment, edit_user_field
+from ydb_logic import QuestionsTables, User, Payment, PaymentType, UserClient
 from aiogram import Bot
+from buttons import payment_button
+from config import AMOUNT
+from languages import get_texts
 
 
 commands_router = Router()
@@ -112,3 +115,65 @@ async def get_photo_file_id(message: Message):
     print(file_id)
     await message.answer(f"file_id:\n{file_id}")
 
+
+@commands_router.message(Command("pay"))
+async def pay(message: Message):
+    user_lang = message.from_user.language_code
+    texts = await get_texts(user_lang)
+    label = texts["TEXT"]["payment"]["label"]
+    title = texts["TEXT"]["payment"]["title"]
+    description = texts["TEXT"]["payment"]["description"]
+
+    prices = [LabeledPrice(label=label, amount=AMOUNT)]
+    button_1 = payment_button(texts["BUTTONS_TEXT"]["pay"].format(amount=AMOUNT))
+    pay_message = await message.answer_invoice(
+        title=title,
+        description=description,
+        payload=f"payment|standard",
+        provider_token="",
+        currency="XTR",
+        prices=prices,
+        reply_markup=button_1
+    )
+
+
+# ------------------------------------------------------------------- ОПЛАТА -------------------------------------------------------
+
+
+@payment_router.pre_checkout_query()
+async def pre_checkout(pre_checkout_query: PreCheckoutQuery):
+    await pre_checkout_query.answer(ok=True)
+
+
+@payment_router.message(F.successful_payment)
+async def on_successful_payment(message: Message):
+    payload = message.successful_payment.invoice_payload
+    user_id = message.from_user.id
+    user_lang = message.from_user.language_code
+
+    texts = await get_texts(user_lang) # получение текста на языке пользователя
+    
+    _, tariff = payload.split("|") # получение данных
+
+    if tariff == "standard":
+        amount=AMOUNT
+
+    # добавление платежа в бд
+    new_payment = Payment(
+        telegram_id=user_id,
+        amount=amount,
+        type=PaymentType.PAY.value
+    )
+
+    await add_new_payment(new_payment)
+
+    await edit_user_field(user_id, "is_paid", True)
+
+    # сообщение о приеме платежа
+    await message.answer(texts["TEXT"]["payment"]["payment_accepted"])
+
+    # # удаление сообщения об оплате
+    # try:
+    #     await bot.delete_message(user_id, pay_message_id)
+    # except Exception as e:
+    #     print("Ошибка удаления сообщений:", e)

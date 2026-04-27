@@ -277,6 +277,15 @@ class UserClient(YDBClient):
             "night_mode":    ydb.PrimitiveType.Bool
         }
 
+        # Маппинг типов YDB -> строка для DECLARE
+        TYPE_DECLARE = {
+            "full_name":     "Utf8?",
+            "username":      "Utf8?",
+            "language_code": "Utf8?",
+            "is_paid":       "Bool",
+            "night_mode":    "Bool"
+        }
+
         user_fields = {k: v for k, v in fields.items() if k in FIELD_TYPES}
 
         if not user_fields:
@@ -289,14 +298,11 @@ class UserClient(YDBClient):
         for field, value in user_fields.items():
             param_name = f"${field}"
             param_type = FIELD_TYPES[field]
+            declare_type = TYPE_DECLARE[field]
 
             set_clauses.append(f"{field} = {param_name}")
             params[param_name] = (value, param_type)
-
-            if isinstance(param_type, ydb.OptionalType):
-                declare_lines.append(f"DECLARE {param_name} AS Utf8?;")
-            else:
-                declare_lines.append(f"DECLARE {param_name} AS Utf8;")
+            declare_lines.append(f"DECLARE {param_name} AS {declare_type};")
 
         query = f"""
             {' '.join(declare_lines)}
@@ -583,35 +589,32 @@ class QuestionClient(YDBClient):
             return False
 
         FIELD_TYPES = {
-            "question": ydb.PrimitiveType.Utf8,
-            "options": ydb.PrimitiveType.Json,
+            "question":          ydb.PrimitiveType.Utf8,
+            "options":           ydb.PrimitiveType.Json,
             "correct_option_id": ydb.PrimitiveType.Uint32,
-            "explanation": ydb.OptionalType(ydb.PrimitiveType.Utf8),
-            "image": ydb.OptionalType(ydb.PrimitiveType.Utf8),
-            "image_dark": ydb.OptionalType(ydb.PrimitiveType.Utf8)
+            "explanation":       ydb.OptionalType(ydb.PrimitiveType.Utf8),
+            "image":             ydb.OptionalType(ydb.PrimitiveType.Utf8),
+            "image_dark":        ydb.OptionalType(ydb.PrimitiveType.Utf8)
+        }
+
+        TYPE_DECLARE = {
+            "question":          "Utf8",
+            "options":           "Json",
+            "correct_option_id": "Uint32",
+            "explanation":       "Utf8?",
+            "image":             "Utf8?",
+            "image_dark":        "Utf8?"
         }
 
         set_clauses = []
         params = {"$id": (question_id, ydb.PrimitiveType.Uint32)}
-
         declare_lines = ["DECLARE $id AS Uint32;"]
 
         for field, value in question_fields.items():
             param_name = f"${field}"
-
             set_clauses.append(f"{field} = {param_name}")
-
-            param_type = FIELD_TYPES[field]
-            params[param_name] = (value, param_type)
-
-            if field == "question":
-                declare_lines.append(f"DECLARE {param_name} AS Utf8;")
-            elif field == "options":
-                declare_lines.append(f"DECLARE {param_name} AS Json;")
-            elif field == "correct_option_id":
-                declare_lines.append(f"DECLARE {param_name} AS Uint32;")
-            else:
-                declare_lines.append(f"DECLARE {param_name} AS Utf8?;")
+            params[param_name] = (value, FIELD_TYPES[field])
+            declare_lines.append(f"DECLARE {param_name} AS {TYPE_DECLARE[field]};")
 
         query = f"""
             {' '.join(declare_lines)}
