@@ -509,6 +509,7 @@ class Question:
     correct_option_id: int
     explanation: Optional[str] = None
     image: Optional[str] = None
+    image_dark: Optional[str] = None
 
 
 class QuestionClient(YDBClient):
@@ -523,6 +524,7 @@ class QuestionClient(YDBClient):
                 `correct_option_id` Uint32 NOT NULL,
                 `explanation` Utf8,
                 `image` Utf8,
+                `image_dark` Utf8,
                 PRIMARY KEY (`id`)
             )
         """
@@ -543,11 +545,12 @@ class QuestionClient(YDBClient):
             DECLARE $correct_option_id AS Uint32;
             DECLARE $explanation AS Utf8?;
             DECLARE $image AS Utf8?;
+            DECLARE $image_dark AS Utf8?;
 
             UPSERT INTO `{self.table_name}` (
-                id, question, options, correct_option_id, explanation, image
+                id, question, options, correct_option_id, explanation, image, image_dark
             ) VALUES (
-                $id, $question, $options, $correct_option_id, $explanation, $image
+                $id, $question, $options, $correct_option_id, $explanation, $image, $image_dark
             );
             """,
             self._to_params(questions)
@@ -559,7 +562,7 @@ class QuestionClient(YDBClient):
             f"""
             DECLARE $id AS Uint32;
 
-            SELECT id, question, options, correct_option_id, explanation, image
+            SELECT id, question, options, correct_option_id, explanation, image, image_dark
             FROM `{self.table_name}`
             WHERE id = $id;
             """,
@@ -582,13 +585,15 @@ class QuestionClient(YDBClient):
             DECLARE $correct_option_id AS Uint32;
             DECLARE $explanation AS Utf8?;
             DECLARE $image AS Utf8?;
+            DECLARE $image_dark AS Utf8?;
 
             UPDATE `{self.table_name}` SET
                 question = $question,
                 options = $options,
                 correct_option_id = $correct_option_id,
                 explanation = $explanation,
-                image = $image
+                image = $image,
+                image_dark = $image_dark
             WHERE id = $id;
             """,
             self._to_params(questions)
@@ -599,7 +604,7 @@ class QuestionClient(YDBClient):
         if not fields:
             return False
 
-        allowed_fields = ['question', 'options', 'correct_option_id', 'explanation', 'image']
+        allowed_fields = ['question', 'options', 'correct_option_id', 'explanation', 'image', 'image_dark']
         question_fields = {k: v for k, v in fields.items() if k in allowed_fields}
 
         if not question_fields:
@@ -611,6 +616,7 @@ class QuestionClient(YDBClient):
             "correct_option_id": ydb.PrimitiveType.Uint32,
             "explanation": ydb.OptionalType(ydb.PrimitiveType.Utf8),
             "image": ydb.OptionalType(ydb.PrimitiveType.Utf8),
+            "image_dark": ydb.OptionalType(ydb.PrimitiveType.Utf8)
         }
 
         set_clauses = []
@@ -676,7 +682,8 @@ class QuestionClient(YDBClient):
             options=options,
             correct_option_id=row.get("correct_option_id"),
             explanation=row.get("explanation"),
-            image=row.get("image")
+            image=row.get("image"),
+            image_dark=row.get("image_dark")
         )
 
     def _to_params(self, questions: Question) -> dict:
@@ -686,7 +693,8 @@ class QuestionClient(YDBClient):
             "$options": (json.dumps(questions.options, ensure_ascii=False), ydb.PrimitiveType.Json),
             "$correct_option_id": (questions.correct_option_id, ydb.PrimitiveType.Uint32),
             "$explanation": (questions.explanation, ydb.OptionalType(ydb.PrimitiveType.Utf8)),
-            "$image": (questions.image, ydb.OptionalType(ydb.PrimitiveType.Utf8))
+            "$image": (questions.image, ydb.OptionalType(ydb.PrimitiveType.Utf8)),
+            "$image_dark": (questions.image_dark, ydb.OptionalType(ydb.PrimitiveType.Utf8))
         }
 
 
@@ -703,9 +711,19 @@ async def create_tables_on_ydb():
     #     await client.create_payments_table()
     #     print("Table 'PAYMENTS' created successfully!")
 
-    # async with QuestionClient(QuestionsTables.RU) as client:
-    #     table_name = await client.create_questions_table()
-    #     print(f"Table '{table_name}' created successfully!")
+    async with QuestionClient(QuestionsTables.RU) as client:
+        table_name = await client.create_questions_table()
+        print(f"Table '{table_name}' created successfully!")
+
+
+# --------------------------------------------------------- ДОБАВЛЕНИЕ СТОЛБЦОВ В ТАБЛИЦУ -------------------------------------------------------
+
+async def migrate():
+    async with QuestionClient(QuestionsTables.RU) as client:
+        await client.execute_query(
+            "ALTER TABLE `questions_ru` ADD COLUMN `image_dark` Utf8;"
+        )
+        print("Миграция выполнена")
 
 
 # --------------------------------------------------------- ЗАПУСК -------------------------------------------------------

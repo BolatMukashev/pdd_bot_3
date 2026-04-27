@@ -70,6 +70,12 @@ async def get_random_question(table_name: QuestionsTables) -> Question:
     return question
 
 
+async def delete_question_by_id(id: int, table_name: QuestionsTables) -> None:
+    async with QuestionClient(table_name) as client:
+        await client.delete_question(id)
+    print(f"✅ Вопрос с ID {id} успешно удален из базы")
+
+
 async def get_user_info(telegram_id: int):
     user, is_trial_active = await get_user_by_id(telegram_id)
     created_at, trial_ends_at = await get_user_time_utc5(user)
@@ -92,17 +98,20 @@ if __name__ == "__main__":
     # asyncio.run(get_user_by_id(12345678909))
 
     new_question = Question(
-         id=2,
+         id=1301,
          question="город в Казахстане1?",
          options=["Астана", "Лондон1", "Париж"],
-         correct_option_id=0
+         correct_option_id=0,
+         explanation="Потому что Астана - столица Казахстана",
+         image="https://upload.wikimedia.org/wikipedia/commons/thumb/6/6f/Astana_Collage.png/2560px-Astana_Collage.png",
+         image_dark="https://upload.wikimedia.org/wikipedia/commons/thumb/6/6f/Astana_Collage.png/2560px-Astana_Collage.png"
     )
 
-    # asyncio.run(add_new_question(new_question, QuestionsTables.RU))
+    # asyncio.run(delete_question_by_id(1301, QuestionsTables.RU))
 
     # asyncio.run(get_random_question(QuestionsTables.RU))
 
-    asyncio.run(get_user_info(int(ADMIN_ID)))
+    # asyncio.run(get_user_info(int(ADMIN_ID)))
 
 
 
