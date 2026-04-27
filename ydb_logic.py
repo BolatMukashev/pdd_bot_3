@@ -18,6 +18,7 @@ __all__ = ['YDBClient',
            'UserClient',
            'Payment',
            'PaymentClient',
+           'PaymentType',
            'Question',
            'QuestionClient',
            'QuestionsTables'
@@ -355,13 +356,20 @@ class UserClient(YDBClient):
 # ------------------------------------------------------------ ПЛАТЕЖИ -----------------------------------------------------------
 
 
+class PaymentType(str, Enum):
+    PAY = "pay"
+    BOOK = "book"
+    THEME = "theme"
+    DONATE = "donate"
+
+
 @dataclass
 class Payment:
     telegram_id: int
     amount: int
-    payment_type: str
-    target_tg_id: Optional[int] = None
+    type: PaymentType
     id: Optional[int] = None
+    product_id: Optional[int] = None
     created_at: Optional[int] = None  # Храним как timestamp (секунды с эпохи)
 
 
@@ -373,7 +381,7 @@ class PaymentClient(YDBClient):
             CREATE TABLE `payments` (
                 `id` Uint64 NOT NULL,
                 `telegram_id` Uint64 NOT NULL,
-                `target_tg_id` Uint64,
+                `product_id` Uint64?,
                 `amount` Uint32 NOT NULL,
                 `type` Utf8 NOT NULL,
                 `created_at` Uint64 NOT NULL,
@@ -402,53 +410,17 @@ class PaymentClient(YDBClient):
             """
             DECLARE $id AS Uint64;
             DECLARE $telegram_id AS Uint64;
-            DECLARE $target_tg_id AS Uint64?;
+            DECLARE $product_id AS Uint64?;
             DECLARE $amount AS Uint32;
             DECLARE $type AS Utf8;
             DECLARE $created_at AS Uint64;
 
-            INSERT INTO payments (id, telegram_id, target_tg_id, amount, type, created_at)
-            VALUES ($id, $telegram_id, $target_tg_id, $amount, $type, $created_at);
+            INSERT INTO payments (id, telegram_id, product_id, amount, type, created_at)
+            VALUES ($id, $telegram_id, $product_id, $amount, $type, $created_at);
             """,
             self._to_params(payment)
         )
-   
-    async def get_collection_targets_with_filter(self, telegram_id: int) -> tuple[list[int], int]:
-        """
-        как get_collection_targets но исключает из поиска:
-        * пользователей без username (NULL или пустая строка)
-        * пользователей с banned = true (таблица user_settings)
-        """
-        query = f"""
-            DECLARE $telegram_id AS Uint64;
-            
-            SELECT p.target_tg_id AS target_id
-            FROM payments AS p
-            INNER JOIN users AS u
-            ON p.target_tg_id = u.telegram_id
-            INNER JOIN user_settings AS s
-            ON p.target_tg_id = s.telegram_id
-            WHERE p.telegram_id = $telegram_id
-            AND p.target_tg_id IS NOT NULL
-            AND u.username IS NOT NULL
-            AND u.username != ""
-            AND s.banned = false;
-        """
-
-        result_sets = await self.execute_query(
-            query,
-            {"$telegram_id": (telegram_id, ydb.PrimitiveType.Uint64)}
-        )
-
-        targets: list[int] = []
-        for result_set in result_sets:
-            for row in result_set.rows:
-                tgt = row["target_id"]
-                if tgt is not None:
-                    targets.append(int(tgt))
-
-        return sorted(targets), len(targets)
-
+        return payment
 
     async def delete_payment(self, payment_id: int) -> None:
         """
@@ -467,9 +439,9 @@ class PaymentClient(YDBClient):
         return Payment(
             id=row["id"],
             telegram_id=row["telegram_id"],
-            target_tg_id=row.get("target_tg_id"),
+            product_id=row.get("product_id"),
             amount=row["amount"],
-            payment_type=row["type"],
+            type=row["type"],
             created_at=row["created_at"],
         )
     
@@ -487,9 +459,9 @@ class PaymentClient(YDBClient):
         return {
             "$id": (payment.id, ydb.PrimitiveType.Uint64),
             "$telegram_id": (payment.telegram_id, ydb.PrimitiveType.Uint64),  
-            "$target_tg_id": (payment.target_tg_id, ydb.OptionalType(ydb.PrimitiveType.Uint64)),  
+            "$product_id": (payment.product_id, ydb.OptionalType(ydb.PrimitiveType.Uint64)),  
             "$amount": (payment.amount, ydb.PrimitiveType.Uint32),
-            "$type": (payment.payment_type, ydb.PrimitiveType.Utf8),
+            "$type": (payment.type, ydb.PrimitiveType.Utf8),
             "$created_at": (payment.created_at, ydb.PrimitiveType.Uint64),
         }
 
@@ -703,17 +675,17 @@ class QuestionClient(YDBClient):
 
 async def create_tables_on_ydb():
     # Создание всех таблиц в базе
-    async with UserClient() as client:
-        await client.create_users_table()
-        print("Table 'USERS' created successfully!")
+    # async with UserClient() as client:
+    #     await client.create_users_table()
+    #     print("Table 'USERS' created successfully!")
 
-    # async with PaymentClient() as client:
-    #     await client.create_payments_table()
-    #     print("Table 'PAYMENTS' created successfully!")
+    async with PaymentClient() as client:
+        await client.create_payments_table()
+        print("Table 'PAYMENTS' created successfully!")
 
-    async with QuestionClient(QuestionsTables.RU) as client:
-        table_name = await client.create_questions_table()
-        print(f"Table '{table_name}' created successfully!")
+    # async with QuestionClient(QuestionsTables.RU) as client:
+    #     table_name = await client.create_questions_table()
+    #     print(f"Table '{table_name}' created successfully!")
 
 
 # --------------------------------------------------------- ДОБАВЛЕНИЕ СТОЛБЦОВ В ТАБЛИЦУ -------------------------------------------------------

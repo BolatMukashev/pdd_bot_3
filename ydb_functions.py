@@ -83,6 +83,13 @@ async def get_user_info(telegram_id: int):
           f"Пробный период активен: {is_trial_active}\n" \
           f"Дата создания: {created_at}\n" \
           f"Дата окончания пробного периода: {trial_ends_at}")
+    
+
+async def add_new_payment(payment: Payment) -> Payment:
+    async with PaymentClient() as client:
+        payment = await client.insert_payment(payment)
+    print(f"✅ Платеж успешно добавлен в базу (ID: {payment.id})")
+    return payment
 
 
 if __name__ == "__main__":
@@ -112,6 +119,15 @@ if __name__ == "__main__":
     # asyncio.run(get_random_question(QuestionsTables.RU))
 
     # asyncio.run(get_user_info(int(ADMIN_ID)))
+
+    new_payment = Payment(
+        telegram_id=12345678909,
+        amount=1000,
+        product_id=2,
+        type=PaymentType.PAY.value
+    )
+
+    asyncio.run(add_new_payment(new_payment))
 
 
 
