@@ -198,6 +198,7 @@ class UserClient(YDBClient):
         else:
             user.created_at = user_data.created_at
             user.trial_ends_at = user_data.trial_ends_at
+            user.is_paid = user_data.is_paid
 
         await self.execute_query(
             """
@@ -363,7 +364,7 @@ class UserClient(YDBClient):
 
 
 class PaymentType(str, Enum):
-    PAY = "pay"
+    ACCESS = "access"
     BOOK = "book"
     THEME = "theme"
     DONATE = "donate"

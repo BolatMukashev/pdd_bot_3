@@ -4,7 +4,7 @@ from aiogram import F, Router
 from aiogram.types import Message, PollAnswer, LabeledPrice, PreCheckoutQuery
 from aiogram.filters import CommandStart, Command
 from ydb_functions import get_random_question, add_new_user, get_user_by_id, trial_check, add_new_payment, edit_user_field
-from ydb_logic import QuestionsTables, User, Payment, PaymentType, UserClient
+from ydb_logic import QuestionsTables, User, Payment, PaymentType
 from aiogram import Bot
 from buttons import payment_button
 from config import AMOUNT
@@ -20,6 +20,10 @@ poll_router = Router()
 
 @commands_router.message(CommandStart())
 async def cmd_start(message: Message):
+
+    user_lang = message.from_user.language_code
+    texts = await get_texts(user_lang)
+
     new_user = User(
         telegram_id=message.from_user.id,
         full_name=message.from_user.full_name,
@@ -28,19 +32,25 @@ async def cmd_start(message: Message):
     )
 
     await add_new_user(new_user)
-    await message.answer(f"Привет, {message.from_user.full_name}!")
-    await message.answer("Нажми на /question, чтобы получить вопрос!")
+
+    await message.answer(texts["TEXT"]["start"].format(full_name=message.from_user.full_name))
 
 
 @text_router.message(F.text)
 async def echo(message: Message):
-    await message.answer("Нажми на /question, чтобы получить вопрос!")
+    user_lang = message.from_user.language_code
+    texts = await get_texts(user_lang)
+
+    await message.answer(texts["TEXT"]["echo"])
 
 
 @commands_router.message(Command("question"))
 async def question(message: Message):
     # отправить quiz
     user_id = message.from_user.id
+    user_lang = message.from_user.language_code
+    texts = await get_texts(user_lang)
+    
     user, is_trial_active = await get_user_by_id(user_id)
     if user is None:
         new_user = User(telegram_id=message.from_user.id,
@@ -67,15 +77,16 @@ async def question(message: Message):
                                 is_anonymous=False,
                                 allows_multiple_answers=False)
     else:
-        await message.answer("Ваш пробный период истек.\n" \
-        "Пожалуйста, произведите оплату, чтобы продолжить использовать бота\n" \
-        "Оплатить: /pay")
+        await message.answer(texts["TEXT"]["stop"])
 
 
 @poll_router.poll_answer()
 async def handle_poll_answer(poll_answer: PollAnswer, bot: Bot):
     # Отправить quiz в ответ на quiz
     chat_id = poll_answer.user.id
+    user_lang = poll_answer.user.language_code
+    texts = await get_texts(user_lang)
+
     user, is_trial_active = await get_user_by_id(chat_id)
     if user is None:
         new_user = User(telegram_id=chat_id,
@@ -103,9 +114,7 @@ async def handle_poll_answer(poll_answer: PollAnswer, bot: Bot):
                             allows_multiple_answers=False)
         
     else:
-        await bot.send_message(chat_id=chat_id, text="Ваш пробный период истек.\n" \
-        "Пожалуйста, произведите оплату, чтобы продолжить использовать бота\n" \
-        "Оплатить: /pay")
+        await bot.send_message(chat_id=chat_id, text=texts["TEXT"]["stop"])
 
 
 @media_router.message(F.photo)
@@ -120,21 +129,19 @@ async def get_photo_file_id(message: Message):
 async def pay(message: Message):
     user_lang = message.from_user.language_code
     texts = await get_texts(user_lang)
+
     label = texts["TEXT"]["payment"]["label"]
     title = texts["TEXT"]["payment"]["title"]
     description = texts["TEXT"]["payment"]["description"]
 
     prices = [LabeledPrice(label=label, amount=AMOUNT)]
     button_1 = payment_button(texts["BUTTONS_TEXT"]["pay"].format(amount=AMOUNT))
-    pay_message = await message.answer_invoice(
-        title=title,
-        description=description,
-        payload=f"payment|standard",
-        provider_token="",
-        currency="XTR",
-        prices=prices,
-        reply_markup=button_1
-    )
+    pay_message = await message.answer_invoice(title=title,
+                                                description=description,
+                                                payload=f"payment|standard",
+                                                provider_token="",
+                                                currency="XTR",
+                                                prices=prices)
 
 
 # ------------------------------------------------------------------- ОПЛАТА -------------------------------------------------------
@@ -162,7 +169,7 @@ async def on_successful_payment(message: Message):
     new_payment = Payment(
         telegram_id=user_id,
         amount=amount,
-        type=PaymentType.PAY.value
+        type=PaymentType.ACCESS.value
     )
 
     await add_new_payment(new_payment)

@@ -132,7 +132,7 @@ if __name__ == "__main__":
         telegram_id=12345678909,
         amount=1000,
         product_id=2,
-        type=PaymentType.PAY.value
+        type=PaymentType.ACCESS.value
     )
 
     # asyncio.run(add_new_payment(new_payment))

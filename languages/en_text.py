@@ -1,35 +1,26 @@
 TEXT = {
-    'start': "👋 Hi there! I'm a photo restoration bot.\n\n"
-             "📸 Send me your old or damaged photo, "
-             "and I'll try to bring it back to life!\n\n"
-             "✨ I can:\n"
-             "• Remove scratches and noise\n"
-             "• Improve quality and sharpness\n"
-             "• Repair damaged areas\n"
-             "• Enhance colors and contrast\n\n"
-             "Just send a photo, and I’ll get started!\n\n"
-             "<i>Your <b>first restoration is FREE!</b></i>",
+    'start': "👋 Hello, {full_name}!\n"
+             "Press /question to get a question!",
 
-    'photo_accepted': "🪄 Restoring your photo... This won’t take long!",
+    "stop": "Your trial period has expired.\n"
+            "Please make a payment to continue using the bot\n"
+            "/pay — press to pay",
 
-    'generation_error': "⚠️ There was an error processing the image.\n"
-                        "I've added one more free restoration to your account.\n"
-                        "Please try sending the photo again.",
-
-    'error_not_image': "⚠️ Please send an image in JPG or PNG format.",
-
-    'payment': {
-        'label': "Restore Photo",
-        'title': "Restore Your Photo",
-        'description': "✨ Bring your old or damaged photo back to life!\n"
-                       "After payment, I’ll restore its sharpness, color, and clarity.",
-        'payment_accepted': "✅ Payment received!\n🪄 Restoring your photo... This won’t take long!"
+    "payment": {
+        "label": "Buy access",
+        "title": "Buy access",
+        "description": "Purchase unlimited access to the bot. One-time payment, lifetime access ✨",
+        "payment_accepted": "Payment accepted ✅\n"
+                            "You can now use the bot without limitations!\n"
+                            "/question — press to get a question!"
     },
 
-    'photo_is_ready': "✨ Done! Your photo has been restored."
+    "echo": "/question — to get a question\n"
+            "/theme — to change the design\n"
+            "/books — to get the list of books\n"
+            "/donate — support the project"
 }
 
 BUTTONS_TEXT = {
-    'pay': "Recovery ⭐ {amount}",
-    'pay_pro': "Improved recovery ⭐ {amount}"
+    'pay': "Buy access ⭐ {amount}"
 }
