@@ -1,6 +1,7 @@
 import json
 from aiogram.types import Update
 from aiogram import Bot, Dispatcher
+from aiogram.client.default import DefaultBotProperties
 from config import BOT_TOKEN
 import logging
 from main import commands_router, text_router, payment_router, media_router
@@ -11,7 +12,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-bot = Bot(token=BOT_TOKEN)
+bot = Bot(token=BOT_TOKEN, default=DefaultBotProperties(parse_mode="HTML"))
 dp = Dispatcher()
 
 

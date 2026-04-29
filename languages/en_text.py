@@ -1,26 +1,24 @@
 TEXT = {
-    'start': "👋 Hello, {full_name}!\n"
-             "Press /question to get a question!",
+    'start': "👋 Hello, <b>{full_name}</b>!\n"
+             "<b>/question</b> — press to get a question!",
 
-    "stop": "Your trial period has expired.\n"
+    'stop': "Your trial period has expired.\n"
             "Please make a payment to continue using the bot\n"
-            "/pay — press to pay",
+            "<b>/pay</b> — press to pay",
 
-    "payment": {
+    'payment': {
         "label": "Buy access",
         "title": "Buy access",
-        "description": "Purchase unlimited access to the bot. One-time payment, lifetime access ✨",
-        "payment_accepted": "Payment accepted ✅\n"
-                            "You can now use the bot without limitations!\n"
-                            "/question — press to get a question!"
+        "description": "Get unlimited access to the bot. One-time purchase, lifetime access ✨",
+        "description_discount": "Get unlimited access to the bot with a 50% DISCOUNT ✨ for just {amount}⭐. Offer valid until: {discount_end_time}",
+        "payment_accepted": "Payment received ✅\n"
+                            "You can now use the bot without limits!\n"
+                            "<b>/question</b> — press to get a question!",
+        "already_paid": "You already have access to the bot ✅\n"
     },
 
-    "echo": "/question — to get a question\n"
-            "/theme — to change the design\n"
-            "/books — to get the list of books\n"
-            "/donate — support the project"
-}
-
-BUTTONS_TEXT = {
-    'pay': "Buy access ⭐ {amount}"
+    "echo": "<b>/question</b> — get a question\n"
+            "<b>/theme</b> — change theme\n"
+            "<b>/books</b> — get a list of books\n"
+            "<b>/donate</b> — support the project"
 }

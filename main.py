@@ -3,7 +3,7 @@
 from aiogram import F, Router
 from aiogram.types import Message, PollAnswer, LabeledPrice, PreCheckoutQuery
 from aiogram.filters import CommandStart, Command
-from ydb_functions import get_random_question, add_new_user, get_user_by_id, trial_check, add_new_payment, edit_user_field
+from ydb_functions import discount_check, get_discount_end_time, get_random_question, add_new_user, get_user_by_id, trial_check, add_new_payment, edit_user_field
 from ydb_logic import QuestionsTables, User, Payment, PaymentType
 from aiogram import Bot
 from buttons import payment_button
@@ -51,7 +51,9 @@ async def question(message: Message):
     user_lang = message.from_user.language_code
     texts = await get_texts(user_lang)
     
-    user, is_trial_active = await get_user_by_id(user_id)
+    user = await get_user_by_id(user_id)
+    is_trial_active = await trial_check(user)
+
     if user is None:
         new_user = User(telegram_id=message.from_user.id,
                         full_name=message.from_user.full_name,
@@ -87,7 +89,9 @@ async def handle_poll_answer(poll_answer: PollAnswer, bot: Bot):
     user_lang = poll_answer.user.language_code
     texts = await get_texts(user_lang)
 
-    user, is_trial_active = await get_user_by_id(chat_id)
+    user = await get_user_by_id(chat_id)
+    is_trial_active = await trial_check(user)
+
     if user is None:
         new_user = User(telegram_id=chat_id,
                         full_name=poll_answer.user.full_name,
@@ -129,13 +133,25 @@ async def get_photo_file_id(message: Message):
 async def pay(message: Message):
     user_lang = message.from_user.language_code
     texts = await get_texts(user_lang)
+    user = await get_user_by_id(message.from_user.id)
+    if user.is_paid:
+        await message.answer(texts["TEXT"]["payment"]["already_paid"])
+        return
 
     label = texts["TEXT"]["payment"]["label"]
     title = texts["TEXT"]["payment"]["title"]
-    description = texts["TEXT"]["payment"]["description"]
+    
+    is_discount_active = await discount_check(user)
 
-    prices = [LabeledPrice(label=label, amount=AMOUNT)]
-    button_1 = payment_button(texts["BUTTONS_TEXT"]["pay"].format(amount=AMOUNT))
+    if is_discount_active:
+        amount = int(AMOUNT / 2)
+        discount_end_time = await get_discount_end_time(user)
+        description = texts["TEXT"]["payment"]["description_discount"].format(amount=amount, AMOUNT=AMOUNT, discount_end_time=discount_end_time)
+    else:
+        amount = AMOUNT
+        description = texts["TEXT"]["payment"]["description"]
+
+    prices = [LabeledPrice(label=label, amount=amount)]
     pay_message = await message.answer_invoice(title=title,
                                                 description=description,
                                                 payload=f"payment|standard",

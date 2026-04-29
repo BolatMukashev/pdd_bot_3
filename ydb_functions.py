@@ -1,5 +1,4 @@
 from typing import Any
-
 from ydb_logic import *
 import asyncio
 import random
@@ -22,9 +21,7 @@ async def get_user_by_id(telegram_id: int) -> tuple[User, bool]:
         user = await client.get_user_by_id(telegram_id)
         if user is None:
             return None, False
-        is_trial_active = await trial_check(user)
-        print(user, is_trial_active)
-    return user, is_trial_active
+    return user
 
 
 async def trial_check(user: User) -> bool:
@@ -33,6 +30,22 @@ async def trial_check(user: User) -> bool:
         trial_ends_at = UserClient.timestamp_to_datetime(user.trial_ends_at)
         now = datetime.now(timezone.utc)
         return now < trial_ends_at
+
+
+async def discount_check(user: User) -> bool:
+        # Проверяем, не истек ли период скидки. Если true - скидка активна, если false - скидка истекла. Скидка действует 4 дня с момента регистрации
+        from datetime import datetime, timezone, timedelta
+        discount_ends_at = UserClient.timestamp_to_datetime(user.created_at) + timedelta(days=4)
+        now = datetime.now(timezone.utc)
+        return now < discount_ends_at
+
+
+async def get_discount_end_time(user: User) -> str:
+        from datetime import timedelta, timezone
+        kz_tz = timezone(timedelta(hours=5))
+        discount_end_time = UserClient.timestamp_to_datetime(user.created_at) + timedelta(days=4)
+        discount_end_time_kz = discount_end_time.astimezone(kz_tz)
+        return discount_end_time_kz.strftime("%H:%M:%S %d-%m-%Y")
 
 
 async def get_user_time_utc5(user: User) -> str:

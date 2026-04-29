@@ -4,6 +4,7 @@ from config import TEST_BOT_TOKEN
 from main import commands_router, text_router, payment_router, media_router, poll_router
 from aiogram import Bot, Dispatcher
 import asyncio
+from aiogram.client.default import DefaultBotProperties
 
 
 async def on_startup():
@@ -16,7 +17,7 @@ async def on_shutdown():
 
 if __name__ == "__main__":
 
-    bot = Bot(token=TEST_BOT_TOKEN)
+    bot = Bot(token=TEST_BOT_TOKEN, default=DefaultBotProperties(parse_mode="HTML"))
     dp = Dispatcher()
 
     dp.startup.register(on_startup)
