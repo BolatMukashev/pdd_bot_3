@@ -65,7 +65,6 @@ async def cmd_question(message: Message):
     texts = await get_texts(user_lang)
     
     user = await get_user_by_id(user_id)
-    is_trial_active = await trial_check(user)
 
     if user is None:
         new_user = User(telegram_id=message.from_user.id,
@@ -74,7 +73,8 @@ async def cmd_question(message: Message):
                         language_code=message.from_user.language_code)
 
         user = await add_new_user(new_user)
-        is_trial_active = await trial_check(user)
+    
+    is_trial_active = await trial_check(user)
 
     if user.is_paid or is_trial_active:
         random_question = await get_random_question(QuestionsTables.RU)

@@ -16,11 +16,9 @@ async def add_new_user(user: User) -> User:
     return user
 
 
-async def get_user_by_id(telegram_id: int) -> tuple[User, bool]:
+async def get_user_by_id(telegram_id: int) -> User | None:
     async with UserClient() as client:
         user = await client.get_user_by_id(telegram_id)
-        if user is None:
-            return None, False
     return user
 
 
@@ -91,6 +89,12 @@ async def delete_question_by_id(id: int, table_name: QuestionsTables) -> None:
     print(f"✅ Вопрос с ID {id} успешно удален из базы")
 
 
+async def delete_user_by_id(telegram_id: int) -> None:
+    async with UserClient() as client:
+        await client.delete_user(telegram_id)
+    print(f"✅ Пользователь с ID {telegram_id} успешно удален из базы")
+
+
 async def get_user_info(telegram_id: int):
     user, is_trial_active = await get_user_by_id(telegram_id)
     created_at, trial_ends_at = await get_user_time_utc5(user)
@@ -152,6 +156,8 @@ if __name__ == "__main__":
 
 
     # asyncio.run(edit_user_field(ADMIN_ID, "is_paid", True))
+
+    asyncio.run(delete_user_by_id(ADMIN_ID))
 
 
 
