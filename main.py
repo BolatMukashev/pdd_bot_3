@@ -1,5 +1,4 @@
 # main.py
-
 from aiogram import F, Router
 from aiogram.types import Message, PollAnswer, LabeledPrice, PreCheckoutQuery
 from aiogram.filters import CommandStart, Command
@@ -27,7 +26,7 @@ async def cmd_start(message: Message):
         telegram_id=message.from_user.id,
         full_name=message.from_user.full_name,
         username=message.from_user.username,
-        language_code=message.from_user.language_code,
+        language_code=user_lang,
     )
 
     await add_new_user(new_user)
@@ -206,4 +205,3 @@ async def on_successful_payment(message: Message):
     # сообщение о приеме платежа
     await message.answer(texts["TEXT"]["payment"]["payment_accepted"])
 
-    

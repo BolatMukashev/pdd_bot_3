@@ -2,6 +2,7 @@ from pathlib import Path
 import json
 from itertools import islice
 from parser_get_tg_photo_id import get_photo_id
+from config import BOT_TOKEN, ADMIN_ID
 
 
 def parse_question(file_path: Path):
@@ -19,7 +20,7 @@ def parse_question(file_path: Path):
         dir = Path(r"C:\Users\Astana\Desktop\MyPrograms\pdd_bot_3\data\pictures")
         image_path = dir / image
         print(image_path)
-        file_id = get_photo_id(image_path)
+        file_id = get_photo_id(image_path, BOT_TOKEN, ADMIN_ID)
         i += 1
 
         if i >= n:
@@ -119,7 +120,7 @@ if __name__ == "__main__":
     input_dir = r"C:\Users\Astana\Desktop\MyPrograms\pdd_bot_3\data\questions"
     output_file = "parsers/questions.json"
 
-    result, errors_count = parse_txt_files(input_dir, 1, 1019)
+    result, errors_count = parse_txt_files(input_dir, 701, 800)
 
     # Читаем существующие данные, если файл есть
     existing = []

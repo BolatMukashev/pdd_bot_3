@@ -59,7 +59,7 @@ async def get_user_time_utc5(user: User) -> str:
 async def add_new_question(question: Question, table_name: QuestionsTables) -> None:
     async with QuestionClient(table_name) as client:
         await client.insert_question(question)
-    print(f"✅ Вопрос  успешно добавлен в базу")
+    print(f"✅ Вопрос {question.id} успешно добавлен в базу")
 
 
 async def get_questions_count(table_name: QuestionsTables) -> int:

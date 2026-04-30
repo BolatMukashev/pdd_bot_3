@@ -38,7 +38,7 @@ class YDBClient:
         self.token = token
         self.driver = None
         self.pool = None
-        self.credentials = ydb.iam.MetadataUrlCredentials() # ydb.AccessTokenCredentials(self.token) 
+        self.credentials = ydb.iam.MetadataUrlCredentials() # ydb.AccessTokenCredentials(self.token) #
     
     async def __aenter__(self):
         """Async context manager entry"""
@@ -683,13 +683,13 @@ async def create_tables_on_ydb():
     #     await client.create_users_table()
     #     print("Table 'USERS' created successfully!")
 
-    async with PaymentClient() as client:
-        await client.create_payments_table()
-        print("Table 'PAYMENTS' created successfully!")
+    # async with PaymentClient() as client:
+    #     await client.create_payments_table()
+    #     print("Table 'PAYMENTS' created successfully!")
 
-    # async with QuestionClient(QuestionsTables.RU) as client:
-    #     table_name = await client.create_questions_table()
-    #     print(f"Table '{table_name}' created successfully!")
+    async with QuestionClient(QuestionsTables.RU) as client:
+        table_name = await client.create_questions_table()
+        print(f"Table '{table_name}' created successfully!")
 
 
 # --------------------------------------------------------- ДОБАВЛЕНИЕ СТОЛБЦОВ В ТАБЛИЦУ -------------------------------------------------------
