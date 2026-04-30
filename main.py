@@ -59,7 +59,7 @@ async def echo(message: Message):
 
 
 @commands_router.message(Command("question"))
-async def question(message: Message):
+async def cmd_question(message: Message):
     # отправить quiz
     user_id = message.from_user.id
     user_lang = message.from_user.language_code
@@ -144,7 +144,7 @@ async def get_photo_file_id(message: Message):
 
 
 @commands_router.message(Command("pay"))
-async def pay(message: Message):
+async def cmd_pay(message: Message):
     user_lang = message.from_user.language_code
     texts = await get_texts(user_lang)
     user = await get_user_by_id(message.from_user.id)
@@ -168,7 +168,7 @@ async def pay(message: Message):
     prices = [LabeledPrice(label=label, amount=amount)]
     pay_message = await message.answer_invoice(title=title,
                                                 description=description,
-                                                payload=f"payment|standard",
+                                                payload=f"payment|amount",
                                                 provider_token="",
                                                 currency="XTR",
                                                 prices=prices)
@@ -190,15 +190,12 @@ async def on_successful_payment(message: Message):
 
     texts = await get_texts(user_lang) # получение текста на языке пользователя
     
-    _, tariff = payload.split("|") # получение данных
-
-    if tariff == "standard":
-        amount=AMOUNT
+    _, amount = payload.split("|") # получение данных
 
     # добавление платежа в бд
     new_payment = Payment(
         telegram_id=user_id,
-        amount=amount,
+        amount=int(amount),
         type=PaymentType.ACCESS.value
     )
 
@@ -209,8 +206,4 @@ async def on_successful_payment(message: Message):
     # сообщение о приеме платежа
     await message.answer(texts["TEXT"]["payment"]["payment_accepted"])
 
-    # # удаление сообщения об оплате
-    # try:
-    #     await bot.delete_message(user_id, pay_message_id)
-    # except Exception as e:
-    #     print("Ошибка удаления сообщений:", e)
+    
