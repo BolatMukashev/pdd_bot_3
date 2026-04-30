@@ -35,17 +35,17 @@ async def cmd_start(message: Message):
     await message.answer(texts["TEXT"]["start"].format(full_name=message.from_user.full_name))
 
 
-@commands_router.message(CommandStart())
+@commands_router.message(Command("theme"))
 async def cmd_theme(message: Message):
     await message.answer("Вы выбрали тему оформления! (пока не работает)")
 
 
-@commands_router.message(CommandStart())
+@commands_router.message(Command("books"))
 async def cmd_books(message: Message):
     await message.answer("Вы выбрали список книг! (пока не работает)")
 
 
-@commands_router.message(CommandStart())
+@commands_router.message(Command("donate"))
 async def cmd_donate(message: Message):
     await message.answer("Вы выбрали поддержку проекта! (пока не работает)")
 
