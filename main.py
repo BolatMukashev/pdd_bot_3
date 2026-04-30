@@ -6,7 +6,6 @@ from aiogram.filters import CommandStart, Command
 from ydb_functions import discount_check, get_discount_end_time, get_random_question, add_new_user, get_user_by_id, trial_check, add_new_payment, edit_user_field
 from ydb_logic import QuestionsTables, User, Payment, PaymentType
 from aiogram import Bot
-from buttons import payment_button
 from config import AMOUNT
 from languages import get_texts
 
