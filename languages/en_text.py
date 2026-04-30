@@ -22,3 +22,5 @@ TEXT = {
             "<b>/books</b> — get a list of books\n"
             "<b>/donate</b> — support the project"
 }
+
+BUTTONS_TEXT = {}

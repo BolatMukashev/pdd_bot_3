@@ -19,3 +19,5 @@ TEXT = {'start': "👋 Привет, <b>{full_name}</b>!\n"
                 "<b>/books</b> - получить список книг\n"
                 "<b>/donate</b> - поддержать проект"
                 }
+
+BUTTONS_TEXT = {}
