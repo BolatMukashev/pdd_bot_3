@@ -24,10 +24,10 @@ if __name__ == "__main__":
     dp.shutdown.register(on_shutdown)
 
     dp.include_router(commands_router)
-    dp.include_router(text_router)
-    dp.include_router(payment_router)
-    dp.include_router(media_router)
+    dp.include_router(payment_router)  # ← выше text_router
     dp.include_router(poll_router)
+    dp.include_router(media_router)
+    dp.include_router(text_router)     # ← последним
 
     async def main():
         await dp.start_polling(bot)
