@@ -7,17 +7,20 @@ import logging
 import asyncio
 from main import commands_router, text_router, payment_router, media_router, poll_router
 
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
 
 bot = Bot(token=BOT_TOKEN, default=DefaultBotProperties(parse_mode="HTML"))
 dp = Dispatcher()
 
+
 dp.include_router(commands_router)
-dp.include_router(text_router)
-dp.include_router(payment_router)
-dp.include_router(media_router)
+dp.include_router(payment_router)  # ← выше text_router
 dp.include_router(poll_router)
+dp.include_router(media_router)
+dp.include_router(text_router)     # ← последним
 
 
 async def handler_async(event, context):

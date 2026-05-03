@@ -7,6 +7,7 @@ from ydb_logic import QuestionsTables, User, Payment, PaymentType
 from aiogram import Bot
 from config import AMOUNT, ADMIN_ID
 from languages import get_texts
+from languages.desc import DESCRIPTIONS, SHORT_DESCRIPTIONS, NAMES
 
 
 commands_router = Router()
@@ -34,6 +35,39 @@ async def cmd_start(message: Message):
     await message.answer(texts["TEXT"]["start"].format(full_name=message.from_user.full_name))
 
 
+# установка описания
+@commands_router.message(Command("set_description"))
+async def cmd_set_description(message: Message, bot: Bot):
+    user_id = message.from_user.id
+    if user_id == int(ADMIN_ID):
+        # установка описания для бота на разных языках
+        for lang, text in DESCRIPTIONS.items():
+            try:
+                await bot.set_my_description(description=text, language_code=lang)
+            except Exception as e:
+                print(f"Ошбика установки описания для языка {lang} - {e}")
+            else:
+                print("Описание для бота установлено ✅")
+
+        # установка короткого описания для бота на разных языках
+        for lang, text in SHORT_DESCRIPTIONS.items():
+            try:
+                await bot.set_my_short_description(short_description=text, language_code=lang)
+            except Exception as e:
+                print(f"Ошбика установки короткого описания для языка {lang} - {e}")
+            else:
+                print("Короткое описание для бота установлено ✅")
+
+        # установка имени бота на разных языках
+        for lang, name in NAMES.items():
+            try:
+                await bot.set_my_name(name=name, language_code=lang)
+            except Exception as e:
+                print(f"Ошбика установки имени для языка {lang} - {e}")
+            else:
+                print("Название бота установлено ✅")
+
+
 @commands_router.message(Command("theme"))
 async def cmd_theme(message: Message):
     await message.answer("Вы выбрали тему оформления! (пока не работает)")
@@ -49,7 +83,7 @@ async def cmd_donate(message: Message):
     await message.answer("Вы выбрали поддержку проекта! (пока не работает)")
 
 
-@text_router.message(F.text)
+@text_router.message(F.text & ~F.successful_payment)
 async def echo(message: Message):
     user_lang = message.from_user.language_code
     texts = await get_texts(user_lang)
@@ -171,7 +205,7 @@ async def cmd_pay(message: Message):
     prices = [LabeledPrice(label=label, amount=amount)]
     pay_message = await message.answer_invoice(title=title,
                                                 description=description,
-                                                payload=f"payment|amount",
+                                                payload=f"payment|{amount}",
                                                 provider_token="",
                                                 currency="XTR",
                                                 prices=prices)
