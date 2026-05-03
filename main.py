@@ -1,13 +1,13 @@
 # main.py
 from aiogram import F, Router
-from aiogram.types import Message, PollAnswer, LabeledPrice, PreCheckoutQuery
+from aiogram.types import Message, PollAnswer, LabeledPrice, PreCheckoutQuery, BotCommandScopeDefault
 from aiogram.filters import CommandStart, Command
 from ydb_functions import discount_check, get_discount_end_time, get_random_question, add_new_user, get_user_by_id, trial_check, add_new_payment, edit_user_field
 from ydb_logic import QuestionsTables, User, Payment, PaymentType
 from aiogram import Bot
 from config import AMOUNT, ADMIN_ID
 from languages import get_texts
-from languages.desc import DESCRIPTIONS, SHORT_DESCRIPTIONS, NAMES
+from languages.desc import DESCRIPTIONS, SHORT_DESCRIPTIONS, NAMES, COMMANDS
 
 
 commands_router = Router()
@@ -66,6 +66,17 @@ async def cmd_set_description(message: Message, bot: Bot):
                 print(f"Ошбика установки имени для языка {lang} - {e}")
             else:
                 print("Название бота установлено ✅")
+        
+        for lang, commands in COMMANDS.items():
+            try:
+                await bot.set_my_commands(
+                    commands=commands,
+                    scope=BotCommandScopeDefault(),
+                    language_code=lang
+                )
+                print(f"Команды установлены для {lang} ✅")
+            except Exception as e:
+                print(f"Ошибка команд для {lang}: {e}")
 
 
 @commands_router.message(Command("theme"))

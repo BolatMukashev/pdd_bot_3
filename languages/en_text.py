@@ -17,10 +17,12 @@ TEXT = {
         "already_paid": "You already have access to the bot ✅\n"
     },
 
-    "echo": "<b>/question</b> — get a question\n"
-            "<b>/theme</b> — change theme\n"
-            "<b>/books</b> — get a list of books\n"
-            "<b>/donate</b> — support the project"
+    "echo": "<b>/question</b> - get a question\n"
+            "<b>/theme</b> - change appearance\n"
+            "<b>/books</b> - get a list of books\n"
+            "<b>/donate</b> - support the project\n"
+            "<b>/forum</b> - discuss traffic rules questions\n"
+            "<b>/error</b> - report an error"
 }
 
 BUTTONS_TEXT = {}
