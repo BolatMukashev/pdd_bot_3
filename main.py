@@ -5,7 +5,7 @@ from aiogram.filters import CommandStart, Command
 from ydb_functions import discount_check, get_discount_end_time, get_random_question, add_new_user, get_user_by_id, trial_check, add_new_payment, edit_user_field
 from ydb_logic import QuestionsTables, User, Payment, PaymentType
 from aiogram import Bot
-from config import AMOUNT
+from config import AMOUNT, ADMIN_ID
 from languages import get_texts
 
 
@@ -144,9 +144,10 @@ async def get_photo_file_id(message: Message):
 
 @commands_router.message(Command("pay"))
 async def cmd_pay(message: Message):
+    user_id = message.from_user.id
     user_lang = message.from_user.language_code
     texts = await get_texts(user_lang)
-    user = await get_user_by_id(message.from_user.id)
+    user = await get_user_by_id(user_id)
     if user.is_paid:
         await message.answer(texts["TEXT"]["payment"]["already_paid"])
         return
@@ -163,6 +164,9 @@ async def cmd_pay(message: Message):
     else:
         amount = AMOUNT
         description = texts["TEXT"]["payment"]["description"]
+
+    if user_id == ADMIN_ID:
+        amount = 1
 
     prices = [LabeledPrice(label=label, amount=amount)]
     pay_message = await message.answer_invoice(title=title,
