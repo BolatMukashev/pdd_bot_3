@@ -8,6 +8,7 @@ from aiogram import Bot
 from config import AMOUNT, ADMIN_ID
 from languages import get_texts
 from languages.desc import DESCRIPTIONS, SHORT_DESCRIPTIONS, NAMES, COMMANDS
+from time import sleep
 
 
 commands_router = Router()
@@ -23,71 +24,75 @@ poll_router = Router()
 @commands_router.message(Command("admin"))
 async def cmd_admin(message: Message, bot: Bot):
     # показать админку
-    if message.from_user.id == int(ADMIN_ID):
-        await message.answer("Команды:\n"
-        "/set_description - установить описание для бота\n"
-        "/set_short_description - установить короткое описание для бота\n"
-        "/set_bot_name - установить имя для бота\n"
-        "/set_menu_commands - установить команды для бота")
+    user_id = message.from_user.id
+    if user_id == ADMIN_ID:
+        await message.answer("Установка команд:\n"
+        "/set_description - описание\n"
+        "/set_short_description - короткое описание\n"
+        "/set_bot_name - имя бота\n"
+        "/set_menu_commands - команды меню")
 
 
 @commands_router.message(Command("set_description"))
 async def cmd_set_description(message: Message, bot: Bot):
     # установка описания для бота на разных языках
     user_id = message.from_user.id
-    if user_id == int(ADMIN_ID):
+    if user_id == ADMIN_ID:
         for lang, text in DESCRIPTIONS.items():
             try:
                 await bot.set_my_description(description=text, language_code=lang)
             except Exception as e:
                 print(f"Ошбика установки описания для языка {lang} - {e}")
             else:
-                print("Описание для бота установлено ✅")
+                print(f"Описание для бота установлено ✅ - {lang}")
+                await message.answer(f"Описание для бота установлено ✅ - {lang}")
 
 
 @commands_router.message(Command("set_short_description"))
 async def cmd_set_short_description(message: Message, bot: Bot):
     # установка короткого описания для бота на разных языках
     user_id = message.from_user.id
-    if user_id == int(ADMIN_ID):
+    if user_id == ADMIN_ID:
         for lang, text in SHORT_DESCRIPTIONS.items():
             try:
                 await bot.set_my_short_description(short_description=text, language_code=lang)
             except Exception as e:
                 print(f"Ошбика установки короткого описания для языка {lang} - {e}")
             else:
-                print("Короткое описание для бота установлено ✅")
+                print(f"Короткое описание для бота установлено ✅ - {lang}")
+                await message.answer(f"Короткое описание для бота установлено ✅ - {lang}")
 
 
 @commands_router.message(Command("set_bot_name"))
 async def cmd_set_bot_name(message: Message, bot: Bot):
     # установка имени бота на разных языках
     user_id = message.from_user.id
-    if user_id == int(ADMIN_ID):
+    if user_id == ADMIN_ID:
         for lang, name in NAMES.items():
             try:
                 await bot.set_my_name(name=name, language_code=lang)
             except Exception as e:
                 print(f"Ошбика установки имени для языка {lang} - {e}")
             else:
-                print("Название бота установлено ✅")
+                print(f"Название бота установлено ✅ - {lang}")
+                await message.answer(f"Название бота установлено ✅ - {lang}")
 
 
 @commands_router.message(Command("set_menu_commands"))
 async def cmd_set_menu_commands(message: Message, bot: Bot):
     # установка команд для бота на разных языках
     user_id = message.from_user.id
-    if user_id == int(ADMIN_ID):
+    if user_id == ADMIN_ID:
         for lang, commands in COMMANDS.items():
             try:
-                await bot.set_my_commands(
-                    commands=commands,
-                    scope=BotCommandScopeDefault(),
-                    language_code=lang
-                )
-                print(f"Команды установлены для {lang} ✅")
+                await bot.set_my_commands(commands=commands, scope=BotCommandScopeDefault(), language_code=lang)
             except Exception as e:
                 print(f"Ошибка команд для {lang}: {e}")
+            else:
+                print(f"Команды меню установлены ✅ - {lang}")
+                await message.answer(f"Команды меню установлены ✅ - {lang}")
+            finally:
+                sleep(1)
 
 
 # -------------------------------------------------------Основные команды бота ---------------------------------------
