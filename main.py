@@ -131,6 +131,20 @@ async def cmd_donate(message: Message):
     await message.answer("Вы выбрали поддержку проекта! (пока не работает)")
 
 
+@commands_router.message(Command("forum"))
+async def cmd_forum(message: Message):
+    lang = message.from_user.language_code
+    texts = await get_texts(lang)
+    await message.answer(texts["TEXT"]["forum"])
+
+
+@commands_router.message(Command("error"))
+async def cmd_error(message: Message):
+    lang = message.from_user.language_code
+    texts = await get_texts(lang)
+    await message.answer(texts["TEXT"]["error"])
+
+
 @commands_router.message(Command("question"))
 async def cmd_question(message: Message):
     # отправить quiz

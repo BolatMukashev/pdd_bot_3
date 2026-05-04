@@ -1,5 +1,6 @@
 TEXT = {
     'start': "👋 Hello, <b>{full_name}</b>!\n"
+                "You have 1 day to try the bot for free!\n"
              "<b>/question</b> — press to get a question!",
 
     'stop': "Your trial period has expired.\n"
@@ -22,7 +23,11 @@ TEXT = {
             "<b>/books</b> - get a list of books\n"
             "<b>/donate</b> - support the project\n"
             "<b>/forum</b> - discuss traffic rules questions\n"
-            "<b>/error</b> - report an error"
+            "<b>/error</b> - report an error",
+    "forum": "You can discuss traffic rules questions in our community:\n"
+            "@pdd_forum",
+    "error": "If you found an error in a question, please let us know:\n"
+            "@pdd_error"
 }
 
 BUTTONS_TEXT = {}
