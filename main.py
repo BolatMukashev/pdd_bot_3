@@ -17,6 +17,82 @@ payment_router = Router()
 poll_router = Router()
 
 
+# -------------------------------------------------------Настройка бота (Админка) ---------------------------------------
+
+
+@commands_router.message(Command("admin"))
+async def cmd_admin(message: Message, bot: Bot):
+    # показать админку
+    if message.from_user.id == int(ADMIN_ID):
+        await message.answer("Команды:\n"
+        "/set_description - установить описание для бота\n"
+        "/set_short_description - установить короткое описание для бота\n"
+        "/set_bot_name - установить имя для бота\n"
+        "/set_menu_commands - установить команды для бота")
+
+
+@commands_router.message(Command("set_description"))
+async def cmd_set_description(message: Message, bot: Bot):
+    # установка описания для бота на разных языках
+    user_id = message.from_user.id
+    if user_id == int(ADMIN_ID):
+        for lang, text in DESCRIPTIONS.items():
+            try:
+                await bot.set_my_description(description=text, language_code=lang)
+            except Exception as e:
+                print(f"Ошбика установки описания для языка {lang} - {e}")
+            else:
+                print("Описание для бота установлено ✅")
+
+
+@commands_router.message(Command("set_short_description"))
+async def cmd_set_short_description(message: Message, bot: Bot):
+    # установка короткого описания для бота на разных языках
+    user_id = message.from_user.id
+    if user_id == int(ADMIN_ID):
+        for lang, text in SHORT_DESCRIPTIONS.items():
+            try:
+                await bot.set_my_short_description(short_description=text, language_code=lang)
+            except Exception as e:
+                print(f"Ошбика установки короткого описания для языка {lang} - {e}")
+            else:
+                print("Короткое описание для бота установлено ✅")
+
+
+@commands_router.message(Command("set_bot_name"))
+async def cmd_set_bot_name(message: Message, bot: Bot):
+    # установка имени бота на разных языках
+    user_id = message.from_user.id
+    if user_id == int(ADMIN_ID):
+        for lang, name in NAMES.items():
+            try:
+                await bot.set_my_name(name=name, language_code=lang)
+            except Exception as e:
+                print(f"Ошбика установки имени для языка {lang} - {e}")
+            else:
+                print("Название бота установлено ✅")
+
+
+@commands_router.message(Command("set_menu_commands"))
+async def cmd_set_menu_commands(message: Message, bot: Bot):
+    # установка команд для бота на разных языках
+    user_id = message.from_user.id
+    if user_id == int(ADMIN_ID):
+        for lang, commands in COMMANDS.items():
+            try:
+                await bot.set_my_commands(
+                    commands=commands,
+                    scope=BotCommandScopeDefault(),
+                    language_code=lang
+                )
+                print(f"Команды установлены для {lang} ✅")
+            except Exception as e:
+                print(f"Ошибка команд для {lang}: {e}")
+
+
+# -------------------------------------------------------Основные команды бота ---------------------------------------
+
+
 @commands_router.message(CommandStart())
 async def cmd_start(message: Message):
 
@@ -35,50 +111,6 @@ async def cmd_start(message: Message):
     await message.answer(texts["TEXT"]["start"].format(full_name=message.from_user.full_name))
 
 
-# установка описания
-@commands_router.message(Command("set_description"))
-async def cmd_set_description(message: Message, bot: Bot):
-    user_id = message.from_user.id
-    if user_id == int(ADMIN_ID):
-        # установка описания для бота на разных языках
-        for lang, text in DESCRIPTIONS.items():
-            try:
-                await bot.set_my_description(description=text, language_code=lang)
-            except Exception as e:
-                print(f"Ошбика установки описания для языка {lang} - {e}")
-            else:
-                print("Описание для бота установлено ✅")
-
-        # установка короткого описания для бота на разных языках
-        for lang, text in SHORT_DESCRIPTIONS.items():
-            try:
-                await bot.set_my_short_description(short_description=text, language_code=lang)
-            except Exception as e:
-                print(f"Ошбика установки короткого описания для языка {lang} - {e}")
-            else:
-                print("Короткое описание для бота установлено ✅")
-
-        # установка имени бота на разных языках
-        for lang, name in NAMES.items():
-            try:
-                await bot.set_my_name(name=name, language_code=lang)
-            except Exception as e:
-                print(f"Ошбика установки имени для языка {lang} - {e}")
-            else:
-                print("Название бота установлено ✅")
-        
-        for lang, commands in COMMANDS.items():
-            try:
-                await bot.set_my_commands(
-                    commands=commands,
-                    scope=BotCommandScopeDefault(),
-                    language_code=lang
-                )
-                print(f"Команды установлены для {lang} ✅")
-            except Exception as e:
-                print(f"Ошибка команд для {lang}: {e}")
-
-
 @commands_router.message(Command("theme"))
 async def cmd_theme(message: Message):
     await message.answer("Вы выбрали тему оформления! (пока не работает)")
@@ -92,14 +124,6 @@ async def cmd_books(message: Message):
 @commands_router.message(Command("donate"))
 async def cmd_donate(message: Message):
     await message.answer("Вы выбрали поддержку проекта! (пока не работает)")
-
-
-@text_router.message(F.text & ~F.successful_payment)
-async def echo(message: Message):
-    user_lang = message.from_user.language_code
-    texts = await get_texts(user_lang)
-
-    await message.answer(texts["TEXT"]["echo"])
 
 
 @commands_router.message(Command("question"))
@@ -179,14 +203,6 @@ async def handle_poll_answer(poll_answer: PollAnswer, bot: Bot):
         await bot.send_message(chat_id=chat_id, text=texts["TEXT"]["stop"])
 
 
-@media_router.message(F.photo)
-async def get_photo_file_id(message: Message):
-    largest_photo = message.photo[-1]
-    file_id = largest_photo.file_id
-    print(file_id)
-    await message.answer(f"file_id:\n{file_id}")
-
-
 @commands_router.message(Command("pay"))
 async def cmd_pay(message: Message):
     user_id = message.from_user.id
@@ -253,4 +269,23 @@ async def on_successful_payment(message: Message):
 
     # сообщение о приеме платежа
     await message.answer(texts["TEXT"]["payment"]["payment_accepted"])
+
+
+# -------------------------------------------------------Обработка других сообщений ---------------------------------------
+
+
+@media_router.message(F.photo)
+async def get_photo_file_id(message: Message):
+    largest_photo = message.photo[-1]
+    file_id = largest_photo.file_id
+    print(file_id)
+    await message.answer(f"file_id:\n{file_id}")
+
+
+@text_router.message(F.text & ~F.successful_payment)
+async def echo(message: Message):
+    user_lang = message.from_user.language_code
+    texts = await get_texts(user_lang)
+
+    await message.answer(texts["TEXT"]["echo"])
 
